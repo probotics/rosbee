@@ -1,0 +1,11 @@
+Each period dt:
+
+	left_count= get_left_wheel_encoder_counts();
+	right_count= get_right_wheel_encoder_counts();
+	
+	delta_distance = (right_count + left_count) * METER_PER_COUNT / 2.0;
+	delta_theta = (right_count- left_count) * METER_PER_COUNT / L;
+	vx = 1000 * delta_distance / dt;
+	vy = 0;
+	vth = 1000 * delta_theta / dt;
+
