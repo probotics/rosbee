@@ -189,7 +189,7 @@ PRI handleSerial | val, i, j, messageComplete
       Add support for error transmission back to the control computer.
       Check if the wordfill works correctly.
   }}
-  wordfill(@SerialMSG,0,SERIAL_MESSAGE_MAX_LENGTH) ''empty SerialMSG     
+  longfill(@SerialMSG,0,SERIAL_MESSAGE_MAX_LENGTH) ''empty SerialMSG     
   '!outa[LED]
   i := 0 ' iterator counter for filling SerialMSG
   j := 0  'iterator for sending back te contents of SerialMSG
@@ -229,7 +229,10 @@ PRI handleSerial | val, i, j, messageComplete
       other:
         serial.str(string("Unexpected message. Halting."))
         '' disableWheels //todo
-        
+  else
+    serial.str(string("Error with errno: "))
+    serial.dec(error)
+       
 PRI parseParam | vx, vy, rot
   {{
     Parses the parameters from the serial message.
@@ -284,7 +287,7 @@ PRI parseNumber(term) : value | n, i, done, hasError
   i := 0 ''pointer for internal array
   done := false
   hasError := false
-  
+ '' longfill(@ParserBuffer,0,SERIAL_MESSAGE_MAX_LENGTH)
   repeat until done
     if serialMSG[p] == term or serialMSG[p] == 0
       done := true
@@ -296,7 +299,8 @@ PRI parseNumber(term) : value | n, i, done, hasError
       ParserBuffer[i] := serialMSG[p]
       i++
       p++
-  if(not hasError)  
+  if(not hasError)
+    parserbuffer[++i] := 0  
     value := serial.strToDec(@ParserBuffer)   
 
   if(DEBUG)
