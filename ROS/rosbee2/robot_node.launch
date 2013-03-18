@@ -1,0 +1,15 @@
+<!-- Starts up the robot node -->
+
+<launch>
+  <!-- The Robot Node -->
+  <node pkg="rosbee2" type="robot_node.py" name="rosbee2">
+    <param name="port" value="/dev/ttyUSB0"/> 
+    <param name="baudrate" value="115200"/>
+    <param name="update_rate" value="1"/>
+    <param name="cmd_vel_timeout" value="0.6"/>
+    <param name="odom_frame" value="odom"/> 
+    <param name="base_frame" value="base_link"/>
+    <param name="publish_tf" value="True"/>
+  </node>
+
+</launch>
