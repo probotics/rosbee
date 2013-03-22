@@ -90,6 +90,7 @@ var
   Byte F32cog ''cog for floating point calculations
     
   Long Setp[MotorCnt] 'Shared with the PID cog, contais the setpoint for each motor.
+  Long enco[MotorCnt] 'stores the current motor count
 
   
 
@@ -189,7 +190,7 @@ PRI handleSerial | val, i, j, messageComplete
       Add support for error transmission back to the control computer.
       Check if the wordfill works correctly.
   }}
-  longfill(@SerialMSG,0,SERIAL_MESSAGE_MAX_LENGTH) ''empty SerialMSG     
+  bytefill(@SerialMSG,0,SERIAL_MESSAGE_MAX_LENGTH) ''empty SerialMSG     
   '!outa[LED]
   i := 0 ' iterator counter for filling SerialMSG
   j := 0  'iterator for sending back te contents of SerialMSG
@@ -268,8 +269,15 @@ PRI parseParam | vx, vy, rot
       error |= (2<<2)
   else
     error|= (2 << 3)
-  move(vx,rot)
-       
+
+  if(error == 0)
+    move(vx,rot)
+  else
+    move(0,0)
+    if(DEBUG)
+      serial.str(string("Error encountered, halting..."))
+      serial.str(string("Errno: "))
+      serial.dec(error)     
 PRI parseNumber(term) : value | n, i, done, hasError
   {{
     Parses a number from the serialMSG, starting at index 'p' until the 'term' char has been found.
@@ -287,9 +295,10 @@ PRI parseNumber(term) : value | n, i, done, hasError
   i := 0 ''pointer for internal array
   done := false
   hasError := false
- '' longfill(@ParserBuffer,0,SERIAL_MESSAGE_MAX_LENGTH)
+  bytefill(@ParserBuffer,0,SERIAL_MESSAGE_MAX_LENGTH)
+  
   repeat until done
-    if serialMSG[p] == term or serialMSG[p] == 0
+    if (serialMSG[p] == term or serialMSG[p] == 0)
       done := true
     if (p == SERIAL_MESSAGE_MAX_LENGTH and not done)
       done := true
@@ -299,6 +308,8 @@ PRI parseNumber(term) : value | n, i, done, hasError
       ParserBuffer[i] := serialMSG[p]
       i++
       p++
+    
+
   if(not hasError)
     parserbuffer[++i] := 0  
     value := serial.strToDec(@ParserBuffer)   
@@ -306,7 +317,7 @@ PRI parseNumber(term) : value | n, i, done, hasError
   if(DEBUG)
     serial.str(string("Value: "))
     serial.dec(value)
-
+    serial.tx(13)    
   return value
 
 PRI SetPIDPars
@@ -332,4 +343,10 @@ PRI SetPIDPars
   PID.SetPosScale(1,1)
   PID.SetFeMax(1,200)
   PID.SetMaxCurr(1,4500)
+
+PRI updateMotorCnt
+{{
+
+}}
+  
                                               
