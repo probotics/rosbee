@@ -31,6 +31,7 @@
 # ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 #
+# Revision $Id$
 
 PACKAGE = 'rosbee2' # this package name
 NAME = 'robot_node' # this node name
@@ -57,7 +58,8 @@ import serial
 import threading
 from math import sin, cos
 
-SERIAL_TIMEOUT = 1  # Serial read timeout (seconds)
+
+SERIAL_TIMEOUT = 0.1  # Serial read timeout (seconds)
 
 class SerialError(Exception):
   pass
@@ -67,19 +69,23 @@ class SerialInterface(object):
   """A wrapper around pySerial for use with robot platform"""
 
   def __init__(self, tty, baudrate):
-    self.ser = serial.Serial(tty, baudrate, 8, 'N', 1, SERIAL_TIMEOUT)
-    self.ser.open()
-
+    self.ser = None
+    try:
+      self.ser = serial.Serial(tty, baudrate, 8, 'N', 1, SERIAL_TIMEOUT)
+    except Exception, err:
+    #if self.ser == None:
+      raise SerialError('ERROR trying to open serial port')
     self.lock = threading.RLock()
 
   def __del__(self):
-    self.ser.close()
+    if not self.ser == None:
+      self.ser.close()
     
   def send(self, bytes):
     """Send a string to the robot."""
     sent = self.ser.write(bytes)
     if not sent==len(bytes):
-      raise SerialError('Error writing to serial port.')
+      raise SerialError('ERROR writing to serial port.')
 
   def read(self):
     """Read a string from the robot."""
@@ -88,48 +94,27 @@ class SerialInterface(object):
     # strip \r and other whitespace
     #data = raw_data.strip() 
     if not data:
-      raise SerialError('Error reading from serial port. No data.')
+      raise SerialError('ERROR reading from serial port. No data.')
     return data
 
   def flush_input(self):
     """Flush input buffer."""
     self.ser.flushInput()
 
-class FakeSerialInterface(object):
-
-  """A fake serial interface to the robot, just for testing"""
-
-  def __init__(self, tty, baudrate):
-    self.serial_data = None
-    self.lock = threading.RLock()
-
-  def __del__(self):
-    pass
-
-  def send(self, data):
-    """Send a string to the robot."""
-    self.serial_data = data
-    rospy.loginfo('send: %s', data)
-
-  def read(self):
-    """Read a string from the robot."""
-    data = self.serial_data
-    rospy.loginfo('read: %s', data)
-    if not data:
-      raise SerialError('Error reading from serial port. No data.')
-    return data
-
-  def flush_input(self):
-    """Flush input buffer."""
-    self.serial_data = None
-		
+	
 class Robot(object):
 
   """Represents the robot."""
 
-  def __init__(self, tty, baudrate):
-    #self.sci = SerialInterface(tty, baudrate)
-    self.sci = FakeSerialInterface(tty, baudrate)
+  def __init__(self, tty, baudrate, fake_connection=False, fake_respons=False):
+    self.fake_connection = fake_connection
+    self.fake_respons = fake_respons
+    self.sci = None
+    if not self.fake_connection:
+      try:
+        self.sci = SerialInterface(tty, baudrate)
+      except Exception, err:
+        raise rospy.ROSInterruptException(str(err))
 
   def send_command(self, command):
     """Send command to the robot.
@@ -138,10 +123,19 @@ class Robot(object):
     """
     #msg = ','.join(map(str, command))
     msg = ','.join(str(x) for x in command) + '\r'
-    with self.sci.lock:
-      self.sci.flush_input()
-      self.sci.send(msg)
-      rsp = self.sci.read()
+
+    if not self.fake_connection:
+      with self.sci.lock:
+        try:
+          self.sci.flush_input()
+          self.sci.send(msg)
+          rsp = self.sci.read()
+        except Exception, err:
+          raise rospy.ROSInterruptException(str(err))
+
+    if self.fake_connection or self.fake_respons:
+      rsp = msg
+
     return tuple(rsp.split(','))
   
   def start(self):
@@ -161,43 +155,29 @@ class Robot(object):
           vy:  linear velocity along the y-axis (m/s)
           vth: angular velocity about the z-axis (rad/s), also called yaw 
 
-    returns curr_vel: current velocity, as measured by robot using its encoders     
+    returns current state, including velocity, as measured by robot using its encoders     
     """
     vx, vy, vth = cmd_vel
-    rospy.loginfo("velocity setpoint   : %s", str(cmd_vel))
 
     cmd = '$2', int(round(vx*1000)), int(round(vy*1000)), int(round(vth*1000))
     rsp = self.send_command(cmd)
 
-    curr_vel = tuple(float(x)/1000 for x in rsp[1:4])
-    rospy.loginfo("velocity measured: %s", str(curr_vel))
-    return curr_vel
+    return tuple(float(x)/1000 for x in rsp[1:])
 
     
 class RobotNode(object):
 
   """The ROS robot node."""
 
-  def __init__(self, default_port='/dev/ttyUSB0', default_baudrate=115200, default_update_rate=20.0):
+  def __init__(self, name):
 
-    """
-    @param default_port: default tty port for connection to Robot.
-        Overriden by ~port param if available.
-    @param default_baudrate: default baudrate for connection to Robot.
-        Overriden by ~baudrate param if available.
-    @param default_update_rate: default rate for polling the Robot
-        Overriden by ~update_rate param if available
-    """
-    self.default_port = default_port
-    self.default_baudrate = default_baudrate
-    self.default_update_rate = default_update_rate
-    
-    rospy.init_node(NAME)
+    rospy.init_node(name)
         
     self._init_params()
     self._init_pubsub()
         
-    self.robot = Robot(self.port, self.baudrate)
+    self.robot = Robot(self.port, self.baudrate, self.fake_connection, self.fake_respons)
+
     self.req_cmd_vel = None
     self._pos2d = Pose2D()
     
@@ -206,19 +186,48 @@ class RobotNode(object):
     self.stop()
    
   def _init_params(self):
-    self.port = rospy.get_param('~port', self.default_port)
-    self.baudrate = rospy.get_param('~baudrate', self.default_baudrate)
-    self.update_rate = rospy.get_param('~update_rate', self.default_update_rate)
+
+    # node general
+    self.update_rate = rospy.get_param('~update_rate', 20.0)
+    self.verbose = rospy.get_param('~verbose', False)
+    
+    # fake serial connection to a robot
+    self.fake_connection = rospy.get_param('~fake_connection', False)
+
+    # fake ideal status respons from the robot
+    self.fake_respons = rospy.get_param('~fake_respons', False)
+
+    # serial connection parameters
+    self.port = rospy.get_param('~port', '/dev/ttyUSB0')
+    self.baudrate = rospy.get_param('~baudrate', 115200)
+
+    # cmd_vel
     self.cmd_vel_timeout = rospy.Duration(rospy.get_param('~cmd_vel_timeout', 0.6))
     self.min_abs_yaw_vel = rospy.get_param('~min_abs_yaw_vel', None)
     self.max_abs_yaw_vel = rospy.get_param('~max_abs_yaw_vel', None)
+    
+    # tf
+    self.publish_tf = rospy.get_param('~publish_tf', False)
     self.odom_frame = rospy.get_param('~odom_frame', 'odom')
     self.base_frame = rospy.get_param('~base_frame', 'base_footprint')
-    self.publish_tf = rospy.get_param('~publish_tf', False)
 
-    rospy.loginfo("serial port: %s"%(self.port))
-    rospy.loginfo("baudrate: %s"%(self.baudrate))
+    # print
+    if self.fake_connection:
+      rospy.loginfo("fake robot connection")
+    else:
+      rospy.loginfo("connect to real robot")
+      rospy.loginfo("serial port: %s"%(self.port))
+      rospy.loginfo("baudrate: %s"%(self.baudrate))
+    
+    if self.fake_respons:
+      rospy.loginfo("fake robot respons")
+
     rospy.loginfo("update_rate: %s"%(self.update_rate))
+    
+    if self.publish_tf:
+       rospy.loginfo("publish tf")
+    else:
+       rospy.loginfo("no tf published")
 
   def _init_pubsub(self):
     self.odom_pub = rospy.Publisher('odom', Odometry)
@@ -277,7 +286,6 @@ class RobotNode(object):
 
         # construct the transform
         transform = (self._pos2d.x, self._pos2d.y, 0.), odom_quat
-        rospy.loginfo("pose: %s", str(transform))
 
         # update the odometry state
         odom.header.stamp = current_time
@@ -304,8 +312,9 @@ class RobotNode(object):
    
   def spin(self):
 
-        odom = Odometry(header=rospy.Header(frame_id=self.odom_frame), child_frame_id=self.base_frame)     
-        last_vel_state_time = None
+        odom = Odometry(header=rospy.Header(frame_id=self.odom_frame), child_frame_id=self.base_frame)
+        transform = None    
+        last_state_time = None
         req_cmd_vel = 0.0, 0.0, 0.0
         last_cmd_vel_time = rospy.get_rostime()
         
@@ -313,9 +322,9 @@ class RobotNode(object):
         while not rospy.is_shutdown():
             current_time = rospy.get_rostime()
             
-            if last_vel_state_time is not None:
+            if last_state_time is not None:
                 # COMPUTE STATE
-                transform = self.compute_odom(last_vel_state, last_vel_state_time, current_time, odom)
+                transform = self.compute_odom(last_vel_state, last_state_time, current_time, odom)
 
                 # PUBLISH STATE
                 self.odom_pub.publish(odom)
@@ -333,11 +342,18 @@ class RobotNode(object):
                 #stop on timeout
                 if current_time - last_cmd_vel_time > self.cmd_vel_timeout:
                     req_cmd_vel = 0.0, 0.0, 0.0
-                    rospy.loginfo('timeout')
+                    if self.verbose:
+                      rospy.loginfo('timeout')
             
             # send velocity command & receive state
-            last_vel_state = self.robot.drive(req_cmd_vel)
-            last_vel_state_time = current_time
+            last_state = self.robot.drive(req_cmd_vel)
+            last_vel_state = last_state[:3]
+            last_state_time = current_time
+
+            if self.verbose:
+              rospy.loginfo("velocity setpoint: %s", str(req_cmd_vel))
+              rospy.loginfo("velocity measured: %s", str(last_vel_state))
+              rospy.loginfo("pose: %s", str(transform))
 
             r.sleep()
             
@@ -348,10 +364,13 @@ class RobotNode(object):
   def stop(self):
     self.robot.stop()
     rospy.loginfo('robot node stopped')
- 	
+
+
 if __name__ == '__main__':
-    try:
-        RobotNode()
-    except rospy.ROSInterruptException:
-        rospy.loginfo("And that's all folks...")
+  rospy.loginfo("%s started...", NAME)
+  try:
+    RobotNode(NAME)
+  except rospy.ROSInterruptException, err:
+    rospy.loginfo(str(err))
+    rospy.loginfo("%s stopped working...", NAME)
  
