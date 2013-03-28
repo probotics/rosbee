@@ -64,8 +64,8 @@ CON
 
    SERIAL_MESSAGE_MAX_LENGTH = 64
 
-   WHEEL_BASE_WIDTH = 0.385
-   CM_PER_COUNT = 17.5
+   WHEEL_BASE_WIDTH = 0.368
+   CM_PER_COUNT = 20.0
 
    DEBUG = 1 'Debug flag for additional spam on the serial terminal. 
   
@@ -151,10 +151,11 @@ pri move(vx, rot) | setpL, setpR
     Serial.str(string(" rot: "))
     Serial.dec(rot)
 
-  ' left = round((vx - WHEEL_BASE_WIDTH*rot)/CM_PER_COUNT)
-  ' right = round((vx + WHEEL_BASE_WIDTH*rot)/CM_PER_COUNTT)
-  setpL := f32.fround(f32.fdiv(f32.fsub(f32.ffloat(vx) , f32.fmul( constant(WHEEL_BASE_WIDTH) , f32.ffloat(rot) )),CM_PER_COUNT)) ' = round(500 - (wheel base width * 100))
-  setpR := f32.fround(f32.fdiv(f32.fadd(f32.ffloat(vx) , f32.fmul( constant(WHEEL_BASE_WIDTH) , f32.ffloat(rot) )),CM_PER_COUNT))
+  ' left = round((vx - WHEEL_BASE_WIDTH/2 *rot)/CM_PER_COUNT)
+  ' right = round((vx + WHEEL_BASE_WIDTH/2 *rot)/CM_PER_COUNTT)
+  
+  setpL := f32.fround(f32.fdiv(f32.fsub(f32.ffloat(vx) , f32.fmul( f32.fdiv( constant(WHEEL_BASE_WIDTH), f32.ffloat(2)) , f32.ffloat(rot) )),CM_PER_COUNT)) ' = round(500 - (wheel base width * 100))
+  setpR := f32.fround(f32.fdiv(f32.fadd(f32.ffloat(vx) , f32.fmul( f32.fdiv( constant(WHEEL_BASE_WIDTH), f32.ffloat(2))  , f32.ffloat(rot) )),CM_PER_COUNT))
   
   if setpL < 129 and setpL > -129 ' only update setpoints if the setpoint is in R{-128, 128}     
     setp[0] := setpL
