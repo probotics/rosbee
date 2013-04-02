@@ -67,7 +67,7 @@ CON
    WHEEL_BASE_WIDTH = 0.368
    CM_PER_COUNT = 20.0
 
-   DEBUG = 1 'Debug flag for additional spam on the serial terminal. 
+   DEBUG = 0 'Debug flag for additional spam on the serial terminal. 
   
 OBJ
   t             : "Timing"
