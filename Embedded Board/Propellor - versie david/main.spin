@@ -65,9 +65,9 @@ CON
    SERIAL_MESSAGE_MAX_LENGTH = 64
 
    WHEEL_BASE_WIDTH = 0.368
-   CM_PER_COUNT = 20.0
-
-   DEBUG = 0 'Debug flag for additional spam on the serial terminal. 
+   MM_PER_S_TO_CNTS_PER_PIDCYCLE = 20.82
+   DEBUG = 0 'Debug flag for additional spam on the serial terminal.
+   REPORT = 1 'Flag to enable or disable reporting setPL setPR actVL actVR
   
 OBJ
   t             : "Timing"
@@ -80,6 +80,7 @@ OBJ
 var 
   Byte SerialCog ' Cog for serial communication
   Byte SerialMSG[SERIAL_MESSAGE_MAX_LENGTH] ' Buffer for the incoming string
+  Byte SerialMSGOUT[SERIAL_MESSAGE_MAX_LENGTH] ' Buffer for the outgoing string
   Byte ParserBuffer[SERIAL_MESSAGE_MAX_LENGTH] ' Buffer for the parser
   Byte p ' Pointer to a position in the incoming string buffer
   Long error 'Error value, error is filled if there are problems with reading / parsing the message. If the error = 0,
@@ -91,6 +92,9 @@ var
     
   Long Setp[MotorCnt] 'Shared with the PID cog, contais the setpoint for each motor.
   Long enco[MotorCnt] 'stores the current motor count
+
+  Long actVelMMS 'Long used to store actual speed in mm/s for feedback over serial
+  Long actVelRadS 'Long used to store actual rotation speed in mrad/s for feedback over serial 
 
   
 
@@ -151,11 +155,11 @@ pri move(vx, rot) | setpL, setpR
     Serial.str(string(" rot: "))
     Serial.dec(rot)
 
-  ' left = round((vx - WHEEL_BASE_WIDTH/2 *rot)/CM_PER_COUNT)
-  ' right = round((vx + WHEEL_BASE_WIDTH/2 *rot)/CM_PER_COUNTT)
+  ' left = round((vx - WHEEL_BASE_WIDTH/2 *rot)/MM_PER_S_TO_CNTS_PER_PIDCYCLE)
+  ' right = round((vx + WHEEL_BASE_WIDTH/2 *rot)/MM_PER_S_TO_CNTS_PER_PIDCYCLE)
   
-  setpL := f32.fround(f32.fdiv(f32.fadd(f32.ffloat(vx) , f32.fmul( f32.fdiv( constant(WHEEL_BASE_WIDTH), f32.ffloat(2)) , f32.ffloat(rot) )),CM_PER_COUNT)) ' = round(500 - (wheel base width * 100))
-  setpR := f32.fround(f32.fdiv(f32.fsub(f32.ffloat(vx) , f32.fmul( f32.fdiv( constant(WHEEL_BASE_WIDTH), f32.ffloat(2))  , f32.ffloat(rot) )),CM_PER_COUNT))
+  setpL := f32.fround(f32.fdiv(f32.fadd(f32.ffloat(vx) , f32.fmul( f32.fdiv( constant(WHEEL_BASE_WIDTH), f32.ffloat(2)) , f32.ffloat(rot) )),MM_PER_S_TO_CNTS_PER_PIDCYCLE)) ' = round(500 - (wheel base width * 100))
+  setpR := f32.fround(f32.fdiv(f32.fsub(f32.ffloat(vx) , f32.fmul( f32.fdiv( constant(WHEEL_BASE_WIDTH), f32.ffloat(2))  , f32.ffloat(rot) )),MM_PER_S_TO_CNTS_PER_PIDCYCLE))
   
   if setpL < 129 and setpL > -129 ' only update setpoints if the setpoint is in R{-128, 128}     
     setp[0] := setpL
@@ -168,7 +172,27 @@ pri move(vx, rot) | setpL, setpR
     Serial.str(string(" Stepr: "))
     Serial.dec(setp[1])
     Serial.str(string(13," Error: "))
-    Serial.dec(error)    
+    Serial.dec(error)
+    
+
+  {{if REPORT
+    Serial.str(string(" Setpl: "))
+    Serial.dec(setp[0])
+    Serial.str(string(" Stepr: "))
+    Serial.dec(setp[1])    
+    Serial.str(string(" ActVL: "))
+    Serial.dec(PID.GetActVel(0))                             
+    Serial.str(string(" ActVR: "))
+    Serial.dec(PID.GetActVel(1))
+    Serial.str(string(" EncPosL: "))
+    Serial.dec(PID.GetEncPos(0))                             'GetEncPos
+    Serial.str(string(" EncPosR: "))
+    Serial.dec(PID.GetEncPos(1))
+    Serial.str(string(" DVelL: "))
+    Serial.dec(PID.GetDeltaVel(0))                           'GetDeltaVel
+    Serial.str(string(" DVelR: "))
+    Serial.dec(PID.GetDeltaVel(1))
+  }}                                                          
 
 PRI handleSerial | val, i, j, messageComplete
   {{
@@ -191,6 +215,31 @@ PRI handleSerial | val, i, j, messageComplete
       Add support for error transmission back to the control computer.
       Check if the wordfill works correctly.
   }}
+
+  if REPORT
+    Serial.str(string(" Setpl: "))
+    Serial.dec(setp[0])
+    Serial.str(string(" Stepr: "))
+    Serial.dec(setp[1])    
+    Serial.str(string(" \nActVL: "))
+    Serial.dec(PID.GetActVel(0))                             
+    Serial.str(string(" ActVR: "))
+    Serial.dec(PID.GetActVel(1))
+    Serial.str(string(" \nEncPosL: "))
+    Serial.dec(PID.GetEncPos(0))                        'GetEncPos
+    Serial.str(string(" EncPosR: "))
+    Serial.dec(PID.GetEncPos(1))
+    Serial.str(string(" \nDVelL: "))
+    Serial.dec(PID.GetDeltaVel(0))                      'GetDeltaVel
+    Serial.str(string(" \nDVelR: "))
+    Serial.dec(PID.GetDeltaVel(1))
+    Serial.str(string(" \nVScaleL: "))
+    Serial.dec(PID.GetVelScale(0))                      'GetVelScale(i)
+    Serial.str(string(" VScaleR: "))
+    Serial.dec(PID.GetVelScale(1))
+                                                              
+
+  
   bytefill(@SerialMSG,0,SERIAL_MESSAGE_MAX_LENGTH) ''empty SerialMSG     
   '!outa[LED]
   i := 0 ' iterator counter for filling SerialMSG
@@ -234,6 +283,8 @@ PRI handleSerial | val, i, j, messageComplete
   else
     serial.str(string("Error with errno: "))
     serial.dec(error)
+  
+  
        
 PRI parseParam | vx, vy, rot
   {{
@@ -350,4 +401,18 @@ PRI updateMotorCnt
 
 }}
   
-                                              
+
+PRI returnActualVelocity
+{{
+    Return the actual velocity over serial to the controller PC
+
+
+    setpL := f32.fround(f32.fdiv(f32.fadd(f32.ffloat(vx) , f32.fmul( f32.fdiv( constant(WHEEL_BASE_WIDTH), f32.ffloat(2)) , f32.ffloat(rot) )),MM_PER_S_TO_CNTS_PER_PIDCYCLE)) ' = round(500 - (wheel base width * 100))
+    setpR := f32.fround(f32.fdiv(f32.fsub(f32.ffloat(vx) , f32.fmul( f32.fdiv( constant(WHEEL_BASE_WIDTH), f32.ffloat(2))  , f32.ffloat(rot) )),MM_PER_S_TO_CNTS_PER_PIDCYCLE))
+
+    Long actVelMMS 'Long used to store actual speed in mm/s for feedback over serial
+  Long actVelRadS 'Long used to store actual rotation speed in mrad/s for feedback over serial 
+  
+}}
+
+actVelMMS := f32.fround(f32.fdiv(f32.fmul(f32.fadd(f32.ffloat(PID.GetActVel(0)) ,f32.ffloat(PID.GetActVel(1)) ),MM_PER_S_TO_CNTS_PER_PIDCYCLE), f32.ffloat(2)))                                             
