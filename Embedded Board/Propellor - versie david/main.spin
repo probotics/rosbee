@@ -67,7 +67,7 @@ CON
    WHEEL_BASE_WIDTH = 0.368
    MM_PER_S_TO_CNTS_PER_PIDCYCLE = 20.82
    DEBUG = 0 'Debug flag for additional spam on the serial terminal.
-   REPORT = 1 'Flag to enable or disable reporting setPL setPR actVL actVR
+   REPORT = 0 'Flag to enable or disable reporting setPL setPR actVL actVR
   
 OBJ
   t             : "Timing"
@@ -217,25 +217,25 @@ PRI handleSerial | val, i, j, messageComplete
   }}
 
   if REPORT
-    Serial.str(string(" Setpl: "))
+    Serial.str(string(" SetpR: "))
     Serial.dec(setp[0])
-    Serial.str(string(" Stepr: "))
+    Serial.str(string(" StepL: "))
     Serial.dec(setp[1])    
-    Serial.str(string(" \nActVL: "))
-    Serial.dec(PID.GetActVel(0))                             
     Serial.str(string(" ActVR: "))
+    Serial.dec(PID.GetActVel(0))                             
+    Serial.str(string(" ActVL: "))
     Serial.dec(PID.GetActVel(1))
-    Serial.str(string(" \nEncPosL: "))
-    Serial.dec(PID.GetEncPos(0))                        'GetEncPos
     Serial.str(string(" EncPosR: "))
+    Serial.dec(PID.GetEncPos(0))                        'GetEncPos
+    Serial.str(string(" EncPosL: "))
     Serial.dec(PID.GetEncPos(1))
-    Serial.str(string(" \nDVelL: "))
+    Serial.str(string(" DVelR: "))
     Serial.dec(PID.GetDeltaVel(0))                      'GetDeltaVel
-    Serial.str(string(" \nDVelR: "))
+    Serial.str(string(" DVelL: "))
     Serial.dec(PID.GetDeltaVel(1))
-    Serial.str(string(" \nVScaleL: "))
-    Serial.dec(PID.GetVelScale(0))                      'GetVelScale(i)
     Serial.str(string(" VScaleR: "))
+    Serial.dec(PID.GetVelScale(0))                      'GetVelScale(i)
+    Serial.str(string(" VScaleL: "))
     Serial.dec(PID.GetVelScale(1))
                                                               
 
@@ -275,7 +275,8 @@ PRI handleSerial | val, i, j, messageComplete
         serial.str(string("$1"))
         '' enable wheels / todo                        
       "2":
-        serial.str(string("$2")) ''This requires further string parsing.
+        'serial.str(string("$2")) ''This requires further string parsing.
+         returnActualVelocity
         parseParam       
       other:
         serial.str(string("Unexpected message. Halting."))
@@ -406,13 +407,36 @@ PRI returnActualVelocity
 {{
     Return the actual velocity over serial to the controller PC
 
-
+    ' left = round((vx - WHEEL_BASE_WIDTH/2 *rot)/MM_PER_S_TO_CNTS_PER_PIDCYCLE)
+    ' right = round((vx + WHEEL_BASE_WIDTH/2 *rot)/MM_PER_S_TO_CNTS_PER_PIDCYCLE)
+    
     setpL := f32.fround(f32.fdiv(f32.fadd(f32.ffloat(vx) , f32.fmul( f32.fdiv( constant(WHEEL_BASE_WIDTH), f32.ffloat(2)) , f32.ffloat(rot) )),MM_PER_S_TO_CNTS_PER_PIDCYCLE)) ' = round(500 - (wheel base width * 100))
     setpR := f32.fround(f32.fdiv(f32.fsub(f32.ffloat(vx) , f32.fmul( f32.fdiv( constant(WHEEL_BASE_WIDTH), f32.ffloat(2))  , f32.ffloat(rot) )),MM_PER_S_TO_CNTS_PER_PIDCYCLE))
 
     Long actVelMMS 'Long used to store actual speed in mm/s for feedback over serial
-  Long actVelRadS 'Long used to store actual rotation speed in mrad/s for feedback over serial 
+  Long actVelRadS 'Long used to store actual rotation speed in mrad/s for feedback over serial
+
+            # distance traveled is the average of the two wheels 
+            d = ( d_left + d_right ) / 2
+            # this approximation works (in radians) for small angles
+            th = ( d_right - d_left ) / self.base_width
+            # calculate velocities
+            self.dx = d / elapsed
+            self.dr = th / elapsed 
   
 }}
 
-actVelMMS := f32.fround(f32.fdiv(f32.fmul(f32.fadd(f32.ffloat(PID.GetActVel(0)) ,f32.ffloat(PID.GetActVel(1)) ),MM_PER_S_TO_CNTS_PER_PIDCYCLE), f32.ffloat(2)))                                             
+actVelMMS := f32.fround(f32.fdiv(f32.fmul(f32.fadd(f32.ffloat(PID.GetActVel(0)) ,f32.ffloat(-PID.GetActVel(1)) ),MM_PER_S_TO_CNTS_PER_PIDCYCLE), f32.ffloat(2)))
+actVelRadS := f32.fround(f32.fdiv(f32.fmul(f32.fsub(f32.ffloat(PID.GetActVel(0)) ,f32.ffloat(-PID.GetActVel(1)) ),MM_PER_S_TO_CNTS_PER_PIDCYCLE),constant(WHEEL_BASE_WIDTH)))
+
+
+
+
+
+
+
+
+Serial.str(string("$2,"))
+Serial.dec(actVelMMS)
+Serial.str(string(",0,"))
+Serial.dec(actVelRadS)                                             
