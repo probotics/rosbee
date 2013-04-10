@@ -65,7 +65,7 @@ CON
    SERIAL_MESSAGE_MAX_LENGTH = 64
 
    WHEEL_BASE_WIDTH = 0.368
-   MM_PER_S_TO_CNTS_PER_PIDCYCLE = 20.82
+   MM_PER_S_TO_CNTS_PER_PIDCYCLE = 20.00
    DEBUG = 0 'Debug flag for additional spam on the serial terminal.
    REPORT = 0 'Flag to enable or disable reporting setPL setPR actVL actVR
   
@@ -428,13 +428,6 @@ PRI returnActualVelocity
 
 actVelMMS := f32.fround(f32.fdiv(f32.fmul(f32.fadd(f32.ffloat(PID.GetActVel(0)) ,f32.ffloat(-PID.GetActVel(1)) ),MM_PER_S_TO_CNTS_PER_PIDCYCLE), f32.ffloat(2)))
 actVelRadS := f32.fround(f32.fdiv(f32.fmul(f32.fsub(f32.ffloat(PID.GetActVel(0)) ,f32.ffloat(-PID.GetActVel(1)) ),MM_PER_S_TO_CNTS_PER_PIDCYCLE),constant(WHEEL_BASE_WIDTH)))
-
-
-
-
-
-
-
 
 Serial.str(string("$2,"))
 Serial.dec(actVelMMS)
