@@ -1,0 +1,222 @@
+<robot name="rosbee-2">
+
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <cylinder length="0.010" radius="0.180"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0.099"/>
+      <material name="lightwood">
+        <color rgba="0.8 0.729 0.568 1"/>
+      </material>
+    </visual>
+  </link>
+  
+  <link name="lwheel">
+    <visual>
+      <geometry>
+        <cylinder length="0.020" radius="0.0615"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <material name="lightblue">
+        <color rgba="0.1921 0.5058 0.839 1"/>
+      </material>
+    </visual>
+  </link>
+  
+  <joint name="base_to_lwheel" type="fixed">
+    <parent link="base_link"/>
+    <child link="lwheel"/>
+    <origin xyz="0 0.180 0.0615" rpy="1.5708 0 0"/>
+  </joint>
+  
+  <link name="rwheel">
+    <visual>
+      <geometry>
+        <cylinder length="0.020" radius="0.0615"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <material name="blue">
+        <color rgba="0.1921 0.5058 0.839 1"/>
+      </material>
+    </visual>
+  </link>
+  
+  <joint name="base_to_rwheel" type="fixed">
+    <parent link="base_link"/>
+    <child link="rwheel"/>
+    <origin xyz="0 -0.180 0.0615" rpy="-1.5708 0 0"/>
+  </joint>
+      
+  <link name="fwheel">
+    <visual>
+      <geometry>
+        <cylinder length="0.060" radius="0.035"/>
+      </geometry>
+      <origin rpy="1.578 0 0" xyz="0 0 0"/>
+      <material name="black">
+        <color rgba="0 0 0 1"/>
+      </material>
+    </visual>
+  </link>
+  
+  <joint name="base_to_fwheel" type="fixed">
+    <parent link="base_link"/>
+    <child link="fwheel"/>
+    <origin xyz="0.14 0 0.035" rpy="0 0 0"/>
+  </joint>
+  
+  <link name="bwheel">
+    <visual>
+      <geometry>
+        <cylinder length="0.060" radius="0.035"/>
+      </geometry>
+      <origin rpy="1.578 0 0" xyz="0 0 0"/>
+      <material name="black">
+        <color rgba="0 0 0 1"/>
+      </material>
+    </visual>
+  </link>
+  
+  <joint name="base_to_bwheel" type="fixed">
+    <parent link="base_link"/>
+    <child link="bwheel"/>
+    <origin xyz="-0.14 0 0.035" rpy="0 0 0"/>
+  </joint>
+  
+  <link name="dome_side1">
+    <visual>
+      <geometry>
+        <box size="0.104 0.120 0.005"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <material name="grey">
+        <color rgba="0.588 0.588 0.588 1"/>
+      </material>
+    </visual>
+  </link>
+  
+  <link name="dome_side2">
+    <visual>
+      <geometry>
+        <box size="0.104 0.120 0.005"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <material name="grey">
+        <color rgba="0.588 0.588 0.588 1"/>
+      </material>
+    </visual>
+  </link>
+  
+  <link name="dome_side3">
+    <visual>
+      <geometry>
+        <box size="0.104 0.120 0.005"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <material name="grey">
+        <color rgba="0.588 0.588 0.588 1"/>
+      </material>
+    </visual>
+  </link>
+  
+  <link name="dome_side4">
+    <visual>
+      <geometry>
+        <box size="0.104 0.120 0.005"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <material name="grey">
+        <color rgba="0.588 0.588 0.588 1"/>
+      </material>
+    </visual>
+  </link>
+  
+  <link name="dome_top">
+    <visual>
+      <geometry>
+        <box size="0.145 0.145 0.005"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <material name="grey">
+        <color rgba="0.588 0.588 0.588 1"/>
+      </material>
+    </visual>
+  </link>
+  
+  <joint name="base_to_dome_side1" type="fixed">
+    <parent link="base_link"/>
+    <child link="dome_side1"/>
+    <origin xyz="0.08 0.08 0.14" rpy="0.7853 0 -3.9269"/>
+  </joint>
+  
+  <joint name="base_to_dome_side2" type="fixed">
+    <parent link="base_link"/>
+    <child link="dome_side2"/>
+    <origin xyz="0.08 -0.08 0.14" rpy="0.7853 0 0.7853"/>
+  </joint>
+  
+  <joint name="base_to_dome_side3" type="fixed">
+    <parent link="base_link"/>
+    <child link="dome_side3"/>
+    <origin xyz="-0.08 0.08 0.14" rpy="0.7853 0 3.9269"/>
+  </joint>
+  
+  <joint name="base_to_dome_side4" type="fixed">
+    <parent link="base_link"/>
+    <child link="dome_side4"/>
+    <origin xyz="-0.08 -0.08 0.14" rpy="0.7853 0 -0.7853"/>
+  </joint>
+  
+  <joint name="base_to_dome_top" type="fixed">
+    <parent link="base_link"/>
+    <child link="dome_top"/>
+    <origin xyz="0 0 0.1825" rpy="0 0 0.7853"/>
+  </joint>
+  
+  <link name="laptop">
+    <visual>
+      <geometry>
+        <box size="0.18 0.26 0.03"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <material name="darkblue">
+        <color rgba="0.04313 0 0.5019 1"/>
+      </material>
+    </visual>
+  </link>
+  
+  <joint name="base_to_laptop" type="fixed">
+    <parent link="base_link"/>
+    <child link="laptop"/>
+    <origin xyz="-0.005 0 0.20" rpy="0 0 0"/>
+  </joint>  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  <link name="laser">
+    <visual>
+      <geometry>
+        <box size="0.075 0.060 0.060"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <material name="darkblue">
+        <color rgba="0.0470 0.0039 0.5019 1"/>
+      </material>
+    </visual>
+  </link>
+  
+  <joint name="base_to_laser" type="fixed">
+    <parent link="base_link"/>
+    <child link="laser"/>
+    <origin xyz="0.13 0 0.21" rpy="0 0 0"/>
+  </joint>
+
+  
+</robot>

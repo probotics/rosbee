@@ -1,0 +1,38 @@
+digraph G {
+node [shape=box];
+"base_link" [label="base_link"];
+"bwheel" [label="bwheel"];
+"dome_side1" [label="dome_side1"];
+"dome_side2" [label="dome_side2"];
+"dome_side3" [label="dome_side3"];
+"dome_side4" [label="dome_side4"];
+"dome_top" [label="dome_top"];
+"fwheel" [label="fwheel"];
+"laptop" [label="laptop"];
+"laser" [label="laser"];
+"lwheel" [label="lwheel"];
+"rwheel" [label="rwheel"];
+node [shape=ellipse, color=blue, fontcolor=blue];
+"base_link" -> "base_to_bwheel" [label="xyz: -0.14 0 0.035 \nrpy: 0 -0 0"]
+"base_to_bwheel" -> "bwheel"
+"base_link" -> "base_to_dome_side1" [label="xyz: 0.08 0.08 0.14 \nrpy: 0.7853 -2.77556e-17 2.35629"]
+"base_to_dome_side1" -> "dome_side1"
+"base_link" -> "base_to_dome_side2" [label="xyz: 0.08 -0.08 0.14 \nrpy: 0.7853 2.77556e-17 0.7853"]
+"base_to_dome_side2" -> "dome_side2"
+"base_link" -> "base_to_dome_side3" [label="xyz: -0.08 0.08 0.14 \nrpy: 0.7853 2.77556e-17 -2.35629"]
+"base_to_dome_side3" -> "dome_side3"
+"base_link" -> "base_to_dome_side4" [label="xyz: -0.08 -0.08 0.14 \nrpy: 0.7853 -2.77556e-17 -0.7853"]
+"base_to_dome_side4" -> "dome_side4"
+"base_link" -> "base_to_dome_top" [label="xyz: 0 0 0.1825 \nrpy: 0 -0 0.7853"]
+"base_to_dome_top" -> "dome_top"
+"base_link" -> "base_to_fwheel" [label="xyz: 0.14 0 0.035 \nrpy: 0 -0 0"]
+"base_to_fwheel" -> "fwheel"
+"base_link" -> "base_to_laptop" [label="xyz: -0.005 0 0.2 \nrpy: 0 -0 0"]
+"base_to_laptop" -> "laptop"
+"base_link" -> "base_to_laser" [label="xyz: 0.13 0 0.21 \nrpy: 0 -0 0"]
+"base_to_laser" -> "laser"
+"base_link" -> "base_to_lwheel" [label="xyz: 0 0.18 0.0615 \nrpy: 1.5708 -0 0"]
+"base_to_lwheel" -> "lwheel"
+"base_link" -> "base_to_rwheel" [label="xyz: 0 -0.18 0.0615 \nrpy: -1.5708 0 0"]
+"base_to_rwheel" -> "rwheel"
+}
