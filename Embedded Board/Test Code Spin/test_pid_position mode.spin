@@ -93,6 +93,7 @@ var
     
   Long Setp[MotorCnt] 'Shared with the PID cog, contais the setpoint for each motor.
   Long enco[MotorCnt] 'stores the current motor count
+  Long prevActPos[MotorCnt] 'Buffer to store Actual velocity reported by PID cog in cnts/pidcycle
 
   Long actVelMMS 'Long used to store actual speed in mm/s for feedback over serial
   Long actVelRadS 'Long used to store actual rotation speed in mrad/s for feedback over serial 
@@ -123,28 +124,39 @@ pub main
   SetPIDPars
   waitcnt(500_000_000+cnt) ''Wait a few seconds for the powersupply to stabelize. 
   setp[0] :=0
-  setp[1] :=0
+  setp[1] := 10
+  prevActPos[1] := PID.GetActPos(1)
 
 
-  
+  t.Pause1s(2)
   serial.str(string("Now accepting commands..."))
   repeat
-    setp[1] :=14  
+    
+    'setp[1] := 10
+    't.Pause1ms(1000)
+     
     't.Pause1s(5)
     'setp[1] :=-14
     't.Pause1s(5)
-
-    Serial.str(string("\nActvel: "))
-    Serial.DEC(PID.GetActVel(1))
-
-
-  repeat
-     
-    'handleSerial
+    't.Pause1ms(20)
+   ' if PID.GetActVel(1) < 1
+    ' PID.setallpidmode(0)
+    t.Pause1ms(10)
+    if (PID.GetActPos(1) - prevActPos[1]) < 1
+      PID.setallpidmode(0)
+    Serial.str(string("Setp: "))
+    Serial.DEC(setp[1])
+    Serial.str(string(" Actpos: "))
+    Serial.DEC(PID.GetActPos(1))
+    Serial.str(string(" prevpos: "))
+    Serial.DEC(prevActPos[1])
+    
+    Serial.str(string(" Actvel: "))
+    Serial.DEC(PID.GetActvel(1))
+    Serial.TX(13)
+    
+    prevActPos[1] := PID.GetActPos(1)
   
-
-
-
   
 
 PRI handleSerial | val, i, j, messageComplete
