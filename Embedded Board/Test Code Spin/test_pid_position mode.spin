@@ -130,10 +130,11 @@ pub main
   serial.str(string("Now accepting commands..."))
   repeat
     setp[1] :=14  
-    t.Pause1s(5)
-    setp[1] :=-14
-    t.Pause1s(5)
-    Serial.str(string("\nActvel: ")
+    't.Pause1s(5)
+    'setp[1] :=-14
+    't.Pause1s(5)
+
+    Serial.str(string("\nActvel: "))
     Serial.DEC(PID.GetActVel(1))
 
 
