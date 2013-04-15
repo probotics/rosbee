@@ -123,13 +123,23 @@ pub main
 
   SetPIDPars
   waitcnt(500_000_000+cnt) ''Wait a few seconds for the powersupply to stabelize. 
+  'setp[0] :=0
+  'setp[1] := 10
+  'prevActPos[1] := PID.GetActPos(1)
+
+
+  
+  serial.str(string("Now accepting commands..."))
+
+  repeat until serial.rx == ST
   setp[0] :=0
   setp[1] := 10
   prevActPos[1] := PID.GetActPos(1)
-
-
   t.Pause1s(2)
-  serial.str(string("Now accepting commands..."))
+
+
+
+  
   repeat
     
     'setp[1] := 10
