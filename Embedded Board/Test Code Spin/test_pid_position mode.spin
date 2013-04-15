@@ -115,7 +115,7 @@ pub main
   serial.str(string("Starting..."))
   PIDCog:=PID.Start(PIDCTime, @Setp,  Enc0Pin, EncCnt, TxQ, RxQ, nPIDLoops) 'thr4, 5 and 6
 
-  pid.setallpidmode(1) '' 2 = position controll
+  pid.setallpidmode(1) '' 1= velocity control 2 = position control
 
 
   repeat while PID.GetPIDStatus<>2                      'Wait while PID initializes
@@ -133,6 +133,8 @@ pub main
     t.Pause1s(5)
     setp[1] :=-14
     t.Pause1s(5)
+    Serial.str(string("\nActvel: ")
+    Serial.DEC(PID.GetActVel(1))
 
 
   repeat
