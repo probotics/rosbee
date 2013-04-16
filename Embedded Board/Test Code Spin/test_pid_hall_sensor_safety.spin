@@ -19,23 +19,26 @@ CON
   nPIDLoops = 2
   MotorCnt = nPIDLoops
   MotorIndex = MotorCnt - 1
-'  Drive0   = 10           ' Drive 0 address, 2 motors per address
-'  Drive1   = Drive0 +1    ' Drive 1
+'  Drive0   = 10                                        ' Drive 0 address, 2 motors per address
+'  Drive1   = Drive0 +1                                 ' Drive 1
 
-  PIDCTime = 10           ' PID Cycle time ms
+  PIDCTime = 10                                         ' PID Cycle time ms
+
+   _1s   = 1_000_000 / 1_000_000                        'Divisor for 1 s
+   _1ms  = 1_000_000 /     1_000                        'Divisor for 1 ms
 
   'Serial pins QiK
-  TXQ      = 26           ' Serial out to QiC
-  RXQ      = 25           ' Serial in
+  TXQ      = 26                                         ' Serial out to QiC
+  RXQ      = 25                                         ' Serial in
   
   ' Quadrature encoders
-  Enc0Pin  = 0            'Start pin
-  EncCnt   = 2            'Number of encoders
+  Enc0Pin  = 0                                          'Start pin
+  EncCnt   = 2                                          'Number of encoders
 
   '' Serial port 
    CR = 13                      
    LF = 10
-   CE = 11                 'CE: Clear to End of line
+   CE = 11                                              'CE: Clear to End of line
    TXD = 30
    RXD = 31
    Baud = 115200 '256000 '115200 '250000 '1000000 '115200 '230400 '115200
@@ -46,8 +49,8 @@ CON
    MINUS = 45 'minus
    DOT = 46 'dot
 
-   SETP0 = 10   'Setpoint values for the pid cog, PID will try to maintain this value as Encoder counts per PID cycle. Change if Needed. Set between 1 and 120
-   SETP1 = 10
+   SETP0 = 20   'Setpoint values for the pid cog, PID will try to maintain this value as Encoder counts per PID cycle. Change if Needed. Set between 1 and 120
+   SETP1 = 20
 
    DEBUG = 1
    
@@ -74,16 +77,16 @@ var
   Long enco[MotorCnt] 'stores the current motor count
   Long prevActPos[MotorCnt] 'Buffer to store Actual velocity reported by PID cog in cnts/pidcycle
   
-pub main  | i
+pub main  | i, T1
   {{
-    Entry point for this system. Starts the serial, PID and floating point cogs.
+    Entry point for this system. Starts the Serial, PID cogs.
 
-    This method will continuously call handleSerial 
     Parameters:
       none
     Returns: none and never.
 
-  }} 
+  }}
+   
   SerialCog:=serial.start(RXD, TXD, 0, Baud)
 
   serial.str(string("Starting..."))
@@ -101,23 +104,28 @@ pub main  | i
   serial.str(string("Now accepting commands..."))
 
   repeat until serial.rx == ST                          'Wait until char '&' has been recieved before turning on motors.
+  T1 := cnt
+  
   setp[0] := SETP0
   setp[1] := SETP1
   prevActPos[0] := PID.GetActPos(0)
   prevActPos[1] := PID.GetActPos(1)
-  t.Pause1s(2)
+  t.Pause1ms(500)
 
   repeat while error <> 1
+   
     t.Pause1ms(5)
 
-    Repeat i from 0 to 1
-      if setp[i] <> 0
+    Repeat i from 0 to (EncCnt - 1)
+    if serial.tx == ST
+     setp[i] := 0 
+    if setp[i] <> 0
         if setp[i] > 0
-          if (PID.GetActPos(i) - prevActPos[i]) < 1
+          if ((PID.GetActPos(i) - prevActPos[i]) < 1) AND  (PID.GetActvel(i) < 2)
             PID.setallpidmode(0)
             error := 1
         if setp[i] < 0
-          if (PID.GetActPos(i) - prevActPos[i]) > 1
+          if ((PID.GetActPos(i) - prevActPos[i]) > 1) AND  (PID.GetActvel(i) > 2)
             PID.setallpidmode(0)
             error := 1
 
@@ -131,6 +139,10 @@ pub main  | i
         Serial.DEC(prevActPos[i])
         Serial.str(string(" Actvel: "))
         Serial.DEC(PID.GetActvel(i))
+        Serial.str(string(" DriveError: "))
+        Serial.DEC(PID.GetError(i))
+        Serial.str(string(" CurrError: "))
+        Serial.DEC(PID.GetCurrError(i))
         Serial.TX(13)
     
       prevActPos[i] := PID.GetActPos(i)
