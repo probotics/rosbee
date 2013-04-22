@@ -129,6 +129,7 @@ class Robot(object):
         try:
           self.sci.flush_input()
           self.sci.send(msg)
+	  #self.sci.send('hello')
           rsp = self.sci.read()
         except Exception, err:
           raise rospy.ROSInterruptException(str(err))
@@ -162,7 +163,7 @@ class Robot(object):
     cmd = '$2', int(round(vx*1000)), int(round(vy*1000)), int(round(vth*1000))
     rsp = self.send_command(cmd)
 
-    return tuple(float(x)/1000 for x in rsp[1:])
+    return tuple(rsp[1:])
 
     
 class RobotNode(object):
@@ -316,6 +317,7 @@ class RobotNode(object):
         transform = None    
         last_state_time = None
         req_cmd_vel = 0.0, 0.0, 0.0
+	last_error_state = ()
         last_cmd_vel_time = rospy.get_rostime()
         
         r = rospy.Rate(self.update_rate)
@@ -347,13 +349,16 @@ class RobotNode(object):
             
             # send velocity command & receive state
             last_state = self.robot.drive(req_cmd_vel)
-            last_vel_state = last_state[:3]
+            last_vel_state = tuple(float(x)/1000 for x in last_state[:3])
             last_state_time = current_time
+	    last_error_state = tuple(float(x) for x in last_state[3:])
 
             if self.verbose:
               rospy.loginfo("velocity setpoint: %s", str(req_cmd_vel))
               rospy.loginfo("velocity measured: %s", str(last_vel_state))
               rospy.loginfo("pose: %s", str(transform))
+	      rospy.loginfo("Errors Qik / Curr0 / Curr1: %s", str(last_error_state))
+	      #rospy.loginfo("Current error: %s", str(last_error_state[1]))
 
             r.sleep()
             
