@@ -112,6 +112,8 @@ pub main
   F32cog:=f32.start
   
   serial.str(string("Starting..."))
+  serial.tx(13) 
+  'serial.tx(10)
   PIDCog:=PID.Start(PIDCTime, @Setp,  Enc0Pin, EncCnt, TxQ, RxQ, nPIDLoops) 'thr4, 5 and 6
   pid.setallpidmode(1) '' 1 = velocity control
   repeat while PID.GetPIDStatus<>2                      'Wait while PID initializes
@@ -124,6 +126,8 @@ pub main
 
   
   serial.str(string("Now accepting commands..."))
+  serial.tx(13) 
+  'serial.tx(10)
   repeat
     handleSerial
   
@@ -173,6 +177,8 @@ pri move(vx, rot) | setpL, setpR
     Serial.dec(setp[1])
     Serial.str(string(13," Error: "))
     Serial.dec(error)
+    serial.tx(13) 
+    'serial.tx(10)
     
 
   {{if REPORT
@@ -216,6 +222,8 @@ PRI handleSerial | val, i, j, messageComplete
       Check if the wordfill works correctly.
   }}
 
+'  returnActualVelocity
+  
   if REPORT
     Serial.str(string(" SetpR: "))
     Serial.dec(setp[0])
@@ -237,6 +245,8 @@ PRI handleSerial | val, i, j, messageComplete
     Serial.dec(PID.GetVelScale(0))                      'GetVelScale(i)
     Serial.str(string(" VScaleL: "))
     Serial.dec(PID.GetVelScale(1))
+    serial.tx(13) 
+    'serial.tx(10)
                                                               
 
   
@@ -265,25 +275,34 @@ PRI handleSerial | val, i, j, messageComplete
     repeat until i == j ''echo Serial MSG
       serial.tx(SerialMSG[j])
       j++
+    serial.tx(10)
           
   if(error == 0)
     case SerialMSG[0] ' 0 is the first character after the '$' in the message.
       "0":  'halt robot
-        serial.str(string("$0")) 
+        serial.str(string("$0"))
+        serial.tx(13) 
+        'serial.tx(10) 
         move(0,0)
       "1":  'start robot
         serial.str(string("$1"))
+        serial.tx(13) 
+        'serial.tx(10)
         '' enable wheels / todo                        
       "2":
         'serial.str(string("$2")) ''This requires further string parsing.
-         returnActualVelocity
+        sendResponse
         parseParam       
       other:
         serial.str(string("Unexpected message. Halting."))
+        serial.tx(13) 
+        'serial.tx(10)
         '' disableWheels //todo
   else
     serial.str(string("Error with errno: "))
     serial.dec(error)
+    serial.tx(13) 
+    'serial.tx(10)
   
   
        
@@ -330,7 +349,9 @@ PRI parseParam | vx, vy, rot
     if(DEBUG)
       serial.str(string("Error encountered, halting..."))
       serial.str(string("Errno: "))
-      serial.dec(error)     
+      serial.dec(error)
+      serial.tx(13) 
+      'serial.tx(10)     
 PRI parseNumber(term) : value | n, i, done, hasError
   {{
     Parses a number from the serialMSG, starting at index 'p' until the 'term' char has been found.
@@ -370,7 +391,8 @@ PRI parseNumber(term) : value | n, i, done, hasError
   if(DEBUG)
     serial.str(string("Value: "))
     serial.dec(value)
-    serial.tx(13)    
+    serial.tx(13) 
+    'serial.tx(10)    
   return value
 
 PRI SetPIDPars
@@ -403,7 +425,7 @@ PRI updateMotorCnt
 }}
   
 
-PRI returnActualVelocity
+PRI sendResponse
 {{
     Return the actual velocity over serial to the controller PC
 
@@ -426,10 +448,21 @@ PRI returnActualVelocity
   
 }}
 
-actVelMMS := f32.fround(f32.fdiv(f32.fmul(f32.fadd(f32.ffloat(PID.GetActVel(0)) ,f32.ffloat(-PID.GetActVel(1)) ),MM_PER_S_TO_CNTS_PER_PIDCYCLE), f32.ffloat(2)))
+actVelMMS  := 0
+actVelRadS := 0
+
+actVelMMS  := f32.fround(f32.fdiv(f32.fmul(f32.fadd(f32.ffloat(PID.GetActVel(0)) ,f32.ffloat(-PID.GetActVel(1)) ),MM_PER_S_TO_CNTS_PER_PIDCYCLE), f32.ffloat(2)))
 actVelRadS := f32.fround(f32.fdiv(f32.fmul(f32.fsub(f32.ffloat(PID.GetActVel(0)) ,f32.ffloat(-PID.GetActVel(1)) ),MM_PER_S_TO_CNTS_PER_PIDCYCLE),constant(WHEEL_BASE_WIDTH)))
 
 Serial.str(string("$2,"))
 Serial.dec(actVelMMS)
 Serial.str(string(",0,"))
-Serial.dec(actVelRadS)                                             
+Serial.dec(actVelRadS)
+Serial.str(string(","))
+Serial.dec(PID.GetError(0))
+Serial.str(string(","))
+Serial.dec(PID.GetCurrError(0))
+Serial.str(string(","))
+Serial.dec(PID.GetCurrError(1))
+serial.tx(13) 
+'serial.tx(10)                                             
