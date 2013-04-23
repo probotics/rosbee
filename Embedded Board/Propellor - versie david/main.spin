@@ -71,7 +71,7 @@ CON
   
 OBJ
   t             : "Timing"
-  PID           : "PID Connect V5_2"             ' PID contr. 4 loops. for wheels
+  PID           : "PID Connect V5_3"             ' PID contr. 4 loops. for wheels
   num           : "simple_numbers"                      ' Number to string conversion
   serial        : "FullDuplexSerial_rr005"              ' PC command and debug interface
   STRs          : "STRINGS2hk"
@@ -129,7 +129,9 @@ pub main
   serial.tx(13) 
   'serial.tx(10)
   repeat
-    handleSerial
+    if serial.rxavail == true
+      handleSerial
+    'sendResponse
   
 
 
@@ -159,8 +161,8 @@ pri move(vx, rot) | setpL, setpR
     Serial.str(string(" rot: "))
     Serial.dec(rot)
 
-  ' left = round((vx - WHEEL_BASE_WIDTH/2 *rot)/MM_PER_S_TO_CNTS_PER_PIDCYCLE)
-  ' right = round((vx + WHEEL_BASE_WIDTH/2 *rot)/MM_PER_S_TO_CNTS_PER_PIDCYCLE)
+  ' left = round((vx + WHEEL_BASE_WIDTH/2 *rot)/MM_PER_S_TO_CNTS_PER_PIDCYCLE)
+  ' right = round((vx - WHEEL_BASE_WIDTH/2 *rot)/MM_PER_S_TO_CNTS_PER_PIDCYCLE)
   
   setpL := f32.fround(f32.fdiv(f32.fadd(f32.ffloat(vx) , f32.fmul( f32.fdiv( constant(WHEEL_BASE_WIDTH), f32.ffloat(2)) , f32.ffloat(rot) )),MM_PER_S_TO_CNTS_PER_PIDCYCLE)) ' = round(500 - (wheel base width * 100))
   setpR := f32.fround(f32.fdiv(f32.fsub(f32.ffloat(vx) , f32.fmul( f32.fdiv( constant(WHEEL_BASE_WIDTH), f32.ffloat(2))  , f32.ffloat(rot) )),MM_PER_S_TO_CNTS_PER_PIDCYCLE))
