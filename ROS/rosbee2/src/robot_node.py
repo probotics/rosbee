@@ -357,7 +357,7 @@ class RobotNode(object):
               rospy.loginfo("velocity setpoint: %s", str(req_cmd_vel))
               rospy.loginfo("velocity measured: %s", str(last_vel_state))
               rospy.loginfo("pose: %s", str(transform))
-	      rospy.loginfo("Errors Qik / Curr0 / Curr1: %s", str(last_error_state))
+	      rospy.loginfo("Debug: %s", str(last_error_state))
 	      #rospy.loginfo("Current error: %s", str(last_error_state[1]))
 
             r.sleep()
