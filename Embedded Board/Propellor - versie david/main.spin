@@ -129,7 +129,7 @@ pub main
   serial.tx(13) 
   'serial.tx(10)
   repeat
-    if serial.rxavail == true
+    'if serial.rxavail == true
       handleSerial
     'sendResponse
   
@@ -300,14 +300,15 @@ PRI handleSerial | val, i, j, messageComplete
         serial.tx(13) 
         'serial.tx(10)
         '' disableWheels //todo
+
+    'sendResponse
+
   else
     serial.str(string("Error with errno: "))
     serial.dec(error)
     serial.tx(13) 
     'serial.tx(10)
-  
-  
-       
+         
 PRI parseParam | vx, vy, rot
   {{
     Parses the parameters from the serial message.
@@ -446,7 +447,13 @@ PRI sendResponse
             th = ( d_right - d_left ) / self.base_width
             # calculate velocities
             self.dx = d / elapsed
-            self.dr = th / elapsed 
+            self.dr = th / elapsed
+
+
+
+
+    TODO: ADD MAIN.SPIN SPIN TIME
+          ADD MAIN.SPIN COUNTER
   
 }}
 
@@ -461,10 +468,22 @@ Serial.dec(actVelMMS)
 Serial.str(string(",0,"))
 Serial.dec(actVelRadS)
 Serial.str(string(","))
+Serial.dec(PID.GetPIDCntr)
+Serial.str(string(", "))
 Serial.dec(PID.GetError(0))
 Serial.str(string(","))
 Serial.dec(PID.GetCurrError(0))
 Serial.str(string(","))
 Serial.dec(PID.GetCurrError(1))
+Serial.str(string(","))
+Serial.dec(PID.GetPIDTime)
+Serial.str(string(","))
+Serial.dec(PID.GetActPos(0))
+Serial.str(string(","))
+Serial.dec(PID.GetActPos(1))
+Serial.str(string(","))
+Serial.dec(PID.GetActCurrent(0))
+Serial.str(string(","))
+Serial.dec(PID.GetActCurrent(1))
 serial.tx(13) 
 'serial.tx(10)                                             
