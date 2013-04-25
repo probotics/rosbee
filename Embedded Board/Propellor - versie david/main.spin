@@ -30,7 +30,11 @@ CON
         
   Led = 27
 
-        
+  'Time related Constants
+  CLK_FREQ = ((_clkmode-xtal1)>>6)*_xinfreq
+  MS_001 = CLK_FREQ / 1_000
+
+          
   'PID constants
   nPIDLoops = 2
   MotorCnt = nPIDLoops
@@ -96,9 +100,10 @@ var
   Long actVelMMS 'Long used to store actual speed in mm/s for feedback over serial
   Long actVelRadS 'Long used to store actual rotation speed in mrad/s for feedback over serial 
 
+  Long maincnt 'Long to store main loopcnt
   
 
-pub main
+pub main | T0
   {{
     Entry point for this system. Starts the serial, PID and floating point cogs.
 
@@ -122,7 +127,7 @@ pub main
   waitcnt(500_000_000+cnt) ''Wait a few seconds for the powersupply to stabelize. 
   setp[0] :=0
   setp[1] :=0
-
+  maincnt :=0
 
   
   serial.str(string("Now accepting commands..."))
@@ -130,7 +135,11 @@ pub main
   'serial.tx(10)
   repeat
     'if serial.rxavail == true
-      handleSerial
+    T0 := cnt
+    handleSerial
+    Serial.Dec(elapsedms(T0))
+    Serial.tx(13)
+    maincnt++
     'sendResponse
   
 
@@ -467,9 +476,9 @@ Serial.str(string("$2,"))
 Serial.dec(actVelMMS)
 Serial.str(string(",0,"))
 Serial.dec(actVelRadS)
-Serial.str(string(","))
-Serial.dec(PID.GetPIDCntr)
 Serial.str(string(", "))
+Serial.dec(PID.GetPIDCntr)
+Serial.str(string(","))
 Serial.dec(PID.GetError(0))
 Serial.str(string(","))
 Serial.dec(PID.GetCurrError(0))
@@ -485,5 +494,12 @@ Serial.str(string(","))
 Serial.dec(PID.GetActCurrent(0))
 Serial.str(string(","))
 Serial.dec(PID.GetActCurrent(1))
-serial.tx(13) 
-'serial.tx(10)                                             
+Serial.str(string(", "))
+Serial.dec(maincnt)
+Serial.str(string(","))
+'serial.tx(13) 
+'serial.tx(10)
+
+PRI elapsedms(tstart)
+
+return ||(cnt - tstart) / MS_001                                            

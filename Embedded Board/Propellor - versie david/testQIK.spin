@@ -68,6 +68,6 @@ pub main
   QikCog:=QiK.Init(rxq, txq)
   QiK.SetProtocol(1)
 
-  qik.setspeedm0(10,20)
-  qik.setspeedm1(10,50)
+  qik.setspeedm0(10,127)
+  qik.setspeedm1(10,127)
   
