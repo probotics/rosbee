@@ -33,7 +33,7 @@ CON
   'Time related Constants
   CLK_FREQ = ((_clkmode-xtal1)>>6)*_xinfreq
   MS_001 = CLK_FREQ / 1_000
-  US_001 = CLK_FREQ / 1
+  US_001 = CLK_FREQ / 1_000_000
           
   'PID constants
   nPIDLoops = 2
@@ -101,9 +101,11 @@ var
   Long actVelRadS 'Long used to store actual rotation speed in mrad/s for feedback over serial 
 
   Long maincnt 'Long to store main loopcnt
-  
 
-pub main | T0
+  Long T0,T1,T2,T3,T4,T5 'Longs used to measure time
+  Long elapsedT0, elapsedT1, elapsedT2, elapsedT3, elapsedT4, elapsedT5
+
+pub main
   {{
     Entry point for this system. Starts the serial, PID and floating point cogs.
 
@@ -116,8 +118,8 @@ pub main | T0
   SerialCog:=serial.start(RXD, TXD, 0, Baud)
   F32cog:=f32.start
   
-  'serial.str(string("Starting..."))
-  'serial.tx(13) 
+  serial.str(string("Starting..."))
+  serial.tx(13) 
   'serial.tx(10)
   PIDCog:=PID.Start(PIDCTime, @Setp,  Enc0Pin, EncCnt, TxQ, RxQ, nPIDLoops) 'thr4, 5 and 6
   pid.setallpidmode(1) '' 1 = velocity control
@@ -131,17 +133,21 @@ pub main | T0
 
   'PID.BrakeWheels(50)
   
-  'serial.str(string("Now accepting commands..."))
-  'serial.tx(13) 
+  serial.str(string("Now accepting commands..."))
+  serial.tx(13) 
   'serial.tx(10)
   repeat
     'if serial.rxavail == true
-    'T0 := cnt
+    T0 := cnt
     handleSerial
-    'Serial.Dec(elapsedms(T0))
-    'Serial.tx(13)
-    Serial.tx(10)
-    'maincnt++
+    elapsedT0 := elapsedus(T0)
+
+
+    Serial.tx(13)
+
+    printTimes
+    maincnt++
+    serial.tx(10)
     'sendResponse
   
 
@@ -166,6 +172,9 @@ pri move(vx, rot) | setpL, setpR
     Possible pitfall is concurrency on the setp array, where the PID cog might read one fresh value and one old value
     as there is no proper way to mark the array as synchronized / volatile without adding semaphores to this cog and the PID cog.
   }}
+
+  'T5 := cnt
+  
   if DEBUG
     Serial.str(string(" vx: "))
     Serial.dec(vx)
@@ -193,7 +202,8 @@ pri move(vx, rot) | setpL, setpR
     serial.tx(13) 
     'serial.tx(10)
                                 
-
+  'elapsedT5 := elapsedus(T5)
+  
 PRI handleSerial | val, i, j, messageComplete
   {{
     Reads the serial message transmitted and parses this message.
@@ -217,6 +227,8 @@ PRI handleSerial | val, i, j, messageComplete
   }}
 
 '  returnActualVelocity
+
+  T1 := cnt
   
   if REPORT
     Serial.str(string(" SetpR: "))
@@ -241,7 +253,7 @@ PRI handleSerial | val, i, j, messageComplete
     Serial.dec(PID.GetVelScale(1))
     serial.tx(13) 
     'serial.tx(10)
-                                                              
+  T2 := cnt                                                            
   serial.rxflush
   
   bytefill(@SerialMSG,0,SERIAL_MESSAGE_MAX_LENGTH) ''empty SerialMSG     
@@ -265,6 +277,8 @@ PRI handleSerial | val, i, j, messageComplete
   ''SerialMSG[i+1] := 0 ''String afsluiten  
   '!outa[LED]  
 
+  elapsedT2 := elapsedus(T2)
+  
   if(DEBUG)
     repeat until i == j ''echo Serial MSG
       serial.tx(SerialMSG[j])
@@ -286,11 +300,14 @@ PRI handleSerial | val, i, j, messageComplete
         '' enable wheels / todo                        
       "2":
         'serial.str(string("$2")) ''This requires further string parsing.
-                                                                                                              '<-------26-04-2013  
+
+        T3 := cnt                                                                                                      '<-------26-04-2013  
         sendResponse
-        
+        elapsedT3 := elapsedus(T3)
+
+        T4 := cnt
         parseParam
-        'serial.tx(10)       
+        elapsedT4 := elapsedus(T4)       
      
       "3":  'get error from Qik
         serial.str(string("$3 "))
@@ -300,8 +317,8 @@ PRI handleSerial | val, i, j, messageComplete
         'serial.tx(10)
 
       other:
-        'serial.str(string("Unexpected message. Halting."))
-        'serial.tx(13) 
+        serial.str(string("Unexpected message. Halting."))
+        serial.tx(13) 
         'serial.tx(10)
         '' disableWheels //todo
     'sendResponse
@@ -310,7 +327,9 @@ PRI handleSerial | val, i, j, messageComplete
     serial.str(string("Error with errno: "))
     serial.dec(error)
     serial.tx(13) 
-    serial.tx(10)
+    'serial.tx(10)
+
+  elapsedT1 := elapsedus(T1)
          
 PRI parseParam | vx, vy, rot
   {{
@@ -327,6 +346,8 @@ PRI parseParam | vx, vy, rot
     Todo:
       Move 'p' as a global variable to within this function and pass it to parseNumber.      
   }}
+  'T2 := cnt
+
   vx := 0
   vy := 0   
   rot := 0
@@ -357,7 +378,10 @@ PRI parseParam | vx, vy, rot
       serial.str(string("Errno: "))
       serial.dec(error)
       serial.tx(13) 
-      serial.tx(10)     
+      'serial.tx(10)
+
+  'elapsedT2 := elapsedus(T2)
+       
 PRI parseNumber(term) : value | n, i, done, hasError
   {{
     Parses a number from the serialMSG, starting at index 'p' until the 'term' char has been found.
@@ -371,6 +395,9 @@ PRI parseNumber(term) : value | n, i, done, hasError
       error: if an error occurd while parsing, the error value will be increased.
       p: the pointer will be increased until 'p' is at the same index as the 'term' char or in between if an error occurred. 
   }}
+
+  'T3 := cnt
+    
   value := 0 ''return value
   i := 0 ''pointer for internal array
   done := false
@@ -398,7 +425,10 @@ PRI parseNumber(term) : value | n, i, done, hasError
     serial.str(string("Value: "))
     serial.dec(value)
     serial.tx(13) 
-    serial.tx(10)    
+    'serial.tx(10)    
+
+  'elapsedT3 := elapsedus(T3)
+
   return value
 
 PRI SetPIDPars
@@ -424,12 +454,6 @@ PRI SetPIDPars
   PID.SetPosScale(1,1)
   PID.SetFeMax(1,200)
   PID.SetMaxCurr(1,4500)
-
-PRI updateMotorCnt
-{{
-
-}}
-  
 
 PRI sendResponse
 {{
@@ -459,6 +483,8 @@ PRI sendResponse
           ADD MAIN.SPIN COUNTER
   
 }}
+
+'T4 := cnt
 
 actVelMMS  := 0
 actVelRadS := 0
@@ -494,10 +520,39 @@ Serial.dec(actVelRadS)
 'serial.tx(13) 
 'serial.tx(10)
 
+'elapsedT4 := elapsedus(T4)
+
 PRI elapsedms(tstart)
 
 return ||(cnt - tstart) / MS_001
 
 PRI elapsedus(tstart)
 
-return ||(cnt - tstart) / US_001                                            
+return ||(cnt - tstart) / US_001
+
+PRI printTimes
+
+Serial.str(string("Main Time: "))
+Serial.DEC(elapsedT0)
+Serial.tx(13)
+
+Serial.str(string("Handle Serial Time: "))
+Serial.DEC(elapsedT1)
+Serial.tx(13)
+
+Serial.str(string("Receive Time: "))
+Serial.DEC(elapsedT2)
+Serial.tx(13)
+
+Serial.str(string("Send Response Time: "))
+Serial.DEC(elapsedT3)
+Serial.tx(13)
+
+Serial.str(string("Parse Param Time: "))
+Serial.DEC(elapsedT4)
+Serial.tx(13)
+
+'Serial.str(string("Move Time: "))
+'Serial.DEC(elapsedT5)
+'Serial.tx(13)
+                  
