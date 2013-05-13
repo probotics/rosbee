@@ -70,6 +70,12 @@ CON
 
    WHEEL_BASE_WIDTH = 0.368
    MM_PER_S_TO_CNTS_PER_PIDCYCLE = 20.00
+   COUNTS_PER_ROTATION =  1856
+   COUNTS_PER_MM = 4.803115031
+   WHEEL_CIRCUMFERENCE = 123.0 * PI 'MM
+   
+
+   
    DEBUG = 0 'Debug flag for additional spam on the serial terminal.
    REPORT = 0 'Flag to enable or disable reporting setPL setPR actVL actVR
   
@@ -101,9 +107,11 @@ var
   Long actVelRadS 'Long used to store actual rotation speed in mrad/s for feedback over serial 
 
   Long maincnt 'Long to store main loopcnt
+
+  Long oldTime[MotorCnt] 'Stores times for velocity calculation 
   
 
-pub main | T0
+pub main | i
   {{
     Entry point for this system. Starts the serial, PID and floating point cogs.
 
@@ -125,22 +133,30 @@ pub main | T0
 
   SetPIDPars
   waitcnt(500_000_000+cnt) ''Wait a few seconds for the powersupply to stabelize. 
-  setp[0] :=0
-  setp[1] :=0
+  'setp[0] :=0
+  'setp[1] :=0
   maincnt :=0
 
+  Repeat i from 0 to (MotorCnt - 1)
+    setp[i]    :=0
+    oldTime[i] :=0
+    enco[i] := PID.GetActPos(i)
+
+  
   'PID.BrakeWheels(50)
   
   'serial.str(string("Now accepting commands..."))
   'serial.tx(13) 
   'serial.tx(10)
   repeat
-    'if serial.rxavail == true
+    if serial.rxavail == true
     'T0 := cnt
-    handleSerial
+      handleSerial
     'Serial.Dec(elapsedms(T0))
     'Serial.tx(13)
-    Serial.tx(10)
+    'calculateActVelocity
+    sendResponse
+    Serial.tx(13)
     'maincnt++
     'sendResponse
   
@@ -288,7 +304,7 @@ PRI handleSerial | val, i, j, messageComplete
         'serial.str(string("$2")) ''This requires further string parsing.
                                                                                                               '<-------26-04-2013  
         sendResponse
-        
+        'calculateActVelocity
         parseParam
         'serial.tx(10)       
      
@@ -493,6 +509,43 @@ Serial.dec(actVelRadS)
 'Serial.str(string(","))
 'serial.tx(13) 
 'serial.tx(10)
+
+PRI calculateVelocity | i, velLeft, velRight
+  {
+            # distance traveled is the average of the two wheels 
+            d = ( d_left + d_right ) / 2
+            # this approximation works (in radians) for small angles
+            th = ( d_right - d_left ) / self.base_width
+            # calculate velocities
+            self.dx = d / elapsed
+            self.dr = th / elapsed
+  
+  }
+  
+  velLeft := f32.fround(f32.fmul(f32.fdiv(f32.fdiv(f32.fsub(f32.ffloat(PID.GetActPos(1)), f32.ffloat(enco[1])),constant(COUNTS_PER_MM)), f32.ffloat(elapsedms(oldtime[1]))),f32.ffloat(1000))) 
+  velRight := f32.fround(f32.fmul(f32.fdiv(f32.fdiv(f32.fsub(f32.ffloat(PID.GetActPos(0)), f32.ffloat(enco[0])),constant(COUNTS_PER_MM)), f32.ffloat(elapsedms(oldtime[0]))),f32.ffloat(1000)))
+
+  velLeft *= -1
+
+  'DEBUG
+
+
+  Serial.str(string("velLeft, velRight, encleft, encright: "))
+  Serial.dec(velLeft)
+  Serial.str(string(", "))
+  Serial.dec(velRight)
+  Serial.str(string(", "))
+  Serial.dec(PID.GetActPos(1))
+  Serial.str(string(", "))
+  Serial.dec(PID.GetActPos(0))
+  serial.tx(13)
+
+
+
+  Repeat i from 0 to (MotorCnt - 1)
+    oldTime[i] :=0
+    enco[i] := PID.GetActPos(i)
+  
 
 PRI elapsedms(tstart)
 
