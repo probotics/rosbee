@@ -1,0 +1,8 @@
+<launch>
+
+	<!-- amcl -->
+	<node name="amcl" pkg="amcl" type="amcl" >
+		<param name="use_map_topic" value="True"/>
+	</node>
+	
+</launch>

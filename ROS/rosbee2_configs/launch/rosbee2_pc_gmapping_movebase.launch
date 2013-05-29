@@ -1,0 +1,10 @@
+<launch>
+
+	<!-- start gmapping -->
+	<include file="$(find rosbee2_configs)/launch/rosbee2_gmapping.launch" />
+	
+	
+	<!-- start move_base node -->
+	<include file="$(find rosbee2_configs)/launch/rosbee_move_base.launch" />
+		
+</launch>

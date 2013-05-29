@@ -1,0 +1,12 @@
+<launch>
+
+	<!-- start mapserver -->
+	<include file="$(find rosbee2_configs)/launch/rosbee2_mapserver.launch" />
+	
+	<!-- start amcl -->
+	<include file="$(find rosbee2_configs)/launch/rosbee2_amcl.launch" />
+		
+	<!-- start move_base node -->
+	<include file="$(find rosbee2_configs)/launch/rosbee_move_base.launch" />
+		
+</launch>
