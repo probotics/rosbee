@@ -4,13 +4,17 @@
 ************
 
 This object provides time delay and time synchronization functions.
+
+KP - 2013 Added Functions to Measure Elapsed Time
 }}
 
 CON
-  
+
+  _1us  = 1_000_000 /         1                   'Divisor for 1 us
   _10us = 1_000_000 /        10                   'Divisor for 10 us
   _1ms  = 1_000_000 /     1_000                   'Divisor for 1 ms
   _1s   = 1_000_000 / 1_000_000                   'Divisor for 1 s
+  
 
 
 VAR
@@ -46,4 +50,12 @@ PUB MarkSync10us(Period)
 
   
 PUB WaitSync  
-  waitcnt(SyncPoint += Delay)     
+  waitcnt(SyncPoint += Delay)
+
+PUB ElapsedMS(tstart)
+
+return ||(cnt - tstart) / _1ms
+
+PUB ElapsedUS(tstart)
+
+return ||(cnt - tstart) / _1us    
