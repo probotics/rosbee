@@ -106,9 +106,10 @@ class Robot(object):
 
   """Represents the robot."""
 
-  def __init__(self, tty, baudrate, fake_connection=False, fake_respons=False):
+  def __init__(self, tty, baudrate, connection_timeout, fake_connection=False, fake_respons=False):
     self.fake_connection = fake_connection
     self.fake_respons = fake_respons
+    self.connection_timeout = connection_timeout
     self.sci = None
     if not self.fake_connection:
       try:
@@ -123,17 +124,23 @@ class Robot(object):
     """
     #msg = ','.join(map(str, command))
     msg = ','.join(str(x) for x in command) + '\r'
-
+    
     if not self.fake_connection:
       with self.sci.lock:
-        try:
-          self.sci.flush_input()
-          self.sci.send(msg)
-	  #self.sci.send('hello')
-          rsp = self.sci.read()
-        except Exception, err:
-          raise rospy.ROSInterruptException(str(err))
-
+        done = False
+        start_time = rospy.get_rostime()
+        while not done:
+          try:
+            self.sci.flush_input()
+            self.sci.send(msg)
+            rsp = self.sci.read()
+            done = True
+          except Exception, err:
+            if rospy.get_rostime() - start_time > self.connection_timeout:
+              raise rospy.ROSInterruptException("connection seems broken")
+            rospy.loginfo('waiting for connection')
+            rospy.sleep(10.) # wait 10 seconds before retrying
+              
     if self.fake_connection or self.fake_respons:
       rsp = msg
 
@@ -162,8 +169,8 @@ class Robot(object):
 
     cmd = '$2', int(round(vx*1000)), int(round(vy*1000)), int(round(vth*1000))
     rsp = self.send_command(cmd)
-
-    return tuple(rsp[1:])
+    state = tuple(float(x)/1000 for x in rsp[1:])   
+    return state
 
     
 class RobotNode(object):
@@ -177,7 +184,7 @@ class RobotNode(object):
     self._init_params()
     self._init_pubsub()
         
-    self.robot = Robot(self.port, self.baudrate, self.fake_connection, self.fake_respons)
+    self.robot = Robot(self.port, self.baudrate, self.connection_timeout, self.fake_connection, self.fake_respons)
 
     self.req_cmd_vel = None
     self._pos2d = Pose2D()
@@ -189,11 +196,11 @@ class RobotNode(object):
   def _init_params(self):
 
     # node general
-    self.update_rate = rospy.get_param('~update_rate', 20.0)
-    self.verbose = rospy.get_param('~verbose', False)
+    self.update_rate = rospy.get_param('~update_rate', 50.0)
+    self.verbose = rospy.get_param('~verbose', True)
     
     # fake serial connection to a robot
-    self.fake_connection = rospy.get_param('~fake_connection', False)
+    self.fake_connection = rospy.get_param('~fake_connection', True)
 
     # fake ideal status respons from the robot
     self.fake_respons = rospy.get_param('~fake_respons', False)
@@ -201,14 +208,19 @@ class RobotNode(object):
     # serial connection parameters
     self.port = rospy.get_param('~port', '/dev/ttyUSB0')
     self.baudrate = rospy.get_param('~baudrate', 115200)
+    self.connection_timeout = rospy.Duration(rospy.get_param('~connection_timeout', 60))
 
     # cmd_vel
     self.cmd_vel_timeout = rospy.Duration(rospy.get_param('~cmd_vel_timeout', 0.6))
     self.min_abs_yaw_vel = rospy.get_param('~min_abs_yaw_vel', None)
     self.max_abs_yaw_vel = rospy.get_param('~max_abs_yaw_vel', None)
     
+    # odom: correction factors from calibration
+    self.odom_angular_scale_correction = rospy.get_param('~odom_angular_scale_correction', 1.0)
+    self.odom_linear_scale_correction = rospy.get_param('~odom_linear_scale_correction', 1.0)
+    
     # tf
-    self.publish_tf = rospy.get_param('~publish_tf', False)
+    self.publish_tf = rospy.get_param('~publish_tf', True)
     self.odom_frame = rospy.get_param('~odom_frame', 'odom')
     self.base_frame = rospy.get_param('~base_frame', 'base_footprint')
 
@@ -255,32 +267,32 @@ class RobotNode(object):
     # Assume robot drives in 2-dimensional world
     self.req_cmd_vel = msg.linear.x, msg.linear.y, msg.angular.z
 
-  def compute_odom(self, last_state, last_time, current_time, odom):
+  def compute_odom(self, velocities, last_time, current_time, odom):
         """
         Compute current odometry.  Updates odom instance and returns tf
         transform. compute_odom() does not set frame ids or covariances in
         Odometry instance.  It will only set stamp, pose, and twist.
 
-        @param last_state: Last velocity reading
-        @type  last_state: velocity (vx, vy, vth)
-        @param last_time: time of last velocity reading
-        @type  last_time: rospy.Time
+        @param velocities: linear and angular velocities
+          @type  velocities: (vx, vy, vth)
+        @param last_time: time of last calculation
+          @type  last_time: rospy.Time
         @param current_time: current time
-        @type  current_time: rospy.Time
+          @type  current_time: rospy.Time
         @param odom: Odometry instance to update.
-        @type  odom: nav_msgs.msg.Odometry
+          @type  odom: nav_msgs.msg.Odometry
 
         @return: transform
         @rtype: ( (float, float, float), (float, float, float, float) )
         """
         dt = (current_time - last_time).to_sec()
-        vx, vy, vth = last_state
+        vx, vy, vth = velocities
         
         # odom calculation from velocities
         th = self._pos2d.theta
-        self._pos2d.x += (vx * cos(th) - vy * sin(th)) * dt;
-        self._pos2d.y += (vx * sin(th) + vy * cos(th)) * dt;
-        self._pos2d.theta += vth * dt;
+        self._pos2d.x += (vx * cos(th) - vy * sin(th)) * self.odom_linear_scale_correction * dt;
+        self._pos2d.y += (vx * sin(th) + vy * cos(th)) * self.odom_linear_scale_correction* dt;
+        self._pos2d.theta += vth * self.odom_angular_scale_correction * dt;
             
         # Quaternion from yaw
         odom_quat = (0., 0., sin(self._pos2d.theta/2.), cos(self._pos2d.theta/2.))
@@ -315,24 +327,16 @@ class RobotNode(object):
 
         odom = Odometry(header=rospy.Header(frame_id=self.odom_frame), child_frame_id=self.base_frame)
         transform = None    
-        last_state_time = None
-        req_cmd_vel = 0.0, 0.0, 0.0
-	last_error_state = ()
+        last_state_time = rospy.get_rostime()
+        last_vel_state = (0.0, 0.0, 0.0)
+        last_other_state = ()
+        req_cmd_vel = (0.0, 0.0, 0.0)
         last_cmd_vel_time = rospy.get_rostime()
         
         r = rospy.Rate(self.update_rate)
         while not rospy.is_shutdown():
             current_time = rospy.get_rostime()
-            
-            if last_state_time is not None:
-                # COMPUTE STATE
-                transform = self.compute_odom(last_vel_state, last_state_time, current_time, odom)
-
-                # PUBLISH STATE
-                self.odom_pub.publish(odom)
-                if self.publish_tf:
-                  self.publish_odometry_transform(odom)
-            
+                       
             # ACT & SENSE
             if self.req_cmd_vel is not None:
                 req_cmd_vel = self.req_cmd_vel
@@ -343,23 +347,35 @@ class RobotNode(object):
             else:
                 #stop on timeout
                 if current_time - last_cmd_vel_time > self.cmd_vel_timeout:
-                    req_cmd_vel = 0.0, 0.0, 0.0
+                    req_cmd_vel = (0.0, 0.0, 0.0)
                     if self.verbose:
                       rospy.loginfo('timeout')
             
             # send velocity command & receive state
+            old_state_time = last_state_time
+            old_vel_state = last_vel_state     
             last_state = self.robot.drive(req_cmd_vel)
-            last_vel_state = tuple(float(x)/1000 for x in last_state[:3])
             last_state_time = current_time
-	    last_error_state = tuple(float(x) for x in last_state[3:])
+            
+            last_vel_state = last_state[:3]
+            last_other_state = last_state[3:]
+
+            # COMPUTE ODOMETRY
+            # use average velocity, i.e. assume constant acceleration
+            avg_vel_state = tuple((float(x) + float(y))/2 for x, y in zip(old_vel_state, last_vel_state))
+            transform = self.compute_odom(avg_vel_state, old_state_time, last_state_time, odom)
+
+            # PUBLISH ODOMETRY
+            self.odom_pub.publish(odom)
+            if self.publish_tf:
+              self.publish_odometry_transform(odom)              
 
             if self.verbose:
               rospy.loginfo("velocity setpoint: %s", str(req_cmd_vel))
               rospy.loginfo("velocity measured: %s", str(last_vel_state))
               rospy.loginfo("pose: %s", str(transform))
-	      rospy.loginfo("Debug: %s", str(last_error_state))
-	      #rospy.loginfo("Current error: %s", str(last_error_state[1]))
-
+              rospy.loginfo("debug: %s", str(last_other_state))
+ 
             r.sleep()
             
   def start(self):

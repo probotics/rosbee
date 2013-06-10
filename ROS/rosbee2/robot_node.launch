@@ -4,17 +4,20 @@
   <!-- The Robot Node -->
   <node pkg="rosbee2" type="robot_node.py" name="rosbee2">
     <param name="verbose" value="True"/>
-    <param name="update_rate" value="10000"/>
+    <param name="update_rate" value="50"/>
     <param name="fake_connection" value="False"/>
     <param name="fake_respons" value="False"/>
     <param name="port" value="/dev/ttyUSB0"/> 
     <param name="baudrate" value="115200"/>
+    <param name="connection_timeout" value="60"/>
     <param name="cmd_vel_timeout" value="0.6"/>
     <param name="min_abs_yaw_vel" value="0.1"/>
     <param name="max_abs_yaw_vel" value="3.14"/>
     <param name="publish_tf" value="True"/>
     <param name="odom_frame" value="odom"/> 
     <param name="base_frame" value="base_link"/>
+    <param name="odom_angular_scale_correction" value="1.0"/>
+    <param name="odom_linear_scale_correction" value="1.0"/>
   </node>
 
 </launch>
