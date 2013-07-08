@@ -92,7 +92,7 @@ class SerialInterface(object):
     raw_data = self.ser.readline()
     data = raw_data
     # strip \r and other whitespace
-    #data = raw_data.strip() 
+    data = raw_data.strip() 
     if not data:
       raise SerialError('ERROR reading from serial port. No data.')
     return data
@@ -101,7 +101,6 @@ class SerialInterface(object):
     """Flush input buffer."""
     self.ser.flushInput()
 
-	
 class Robot(object):
 
   """Represents the robot."""
@@ -110,12 +109,9 @@ class Robot(object):
     self.fake_connection = fake_connection
     self.fake_respons = fake_respons
     self.connection_timeout = connection_timeout
+    self.tty = tty
+    self.baudrate = baudrate
     self.sci = None
-    if not self.fake_connection:
-      try:
-        self.sci = SerialInterface(tty, baudrate)
-      except Exception, err:
-        raise rospy.ROSInterruptException(str(err))
 
   def send_command(self, command):
     """Send command to the robot.
@@ -124,22 +120,29 @@ class Robot(object):
     """
     #msg = ','.join(map(str, command))
     msg = ','.join(str(x) for x in command) + '\r'
+    #rospy.loginfo("msg=%s", str(msg))
     
     if not self.fake_connection:
-      with self.sci.lock:
         done = False
         start_time = rospy.get_rostime()
         while not done:
           try:
-            self.sci.flush_input()
-            self.sci.send(msg)
-            rsp = self.sci.read()
+            if self.sci is None:
+                self.sci = SerialInterface(self.tty, self.baudrate)
+            with self.sci.lock:
+                self.sci.flush_input()
+                self.sci.send(msg)
+                rsp = self.sci.read()
+            #rsp = msg
+            #rospy.loginfo("rsp=%s", str(rsp))
             done = True
           except Exception, err:
+            rospy.loginfo(str(err))
             if rospy.get_rostime() - start_time > self.connection_timeout:
-              raise rospy.ROSInterruptException("connection seems broken")
+              raise rospy.ROSInterruptException("connection to robot seems broken")
+            self.sci = None # assume serial interface is broken
             rospy.loginfo('waiting for connection')
-            rospy.sleep(10.) # wait 10 seconds before retrying
+            rospy.sleep(1.) # wait 1 seconds before retrying
               
     if self.fake_connection or self.fake_respons:
       rsp = msg
@@ -148,13 +151,15 @@ class Robot(object):
   
   def start(self):
 	  """Start the robot."""
-	  command = '$1'
+	  command = ('$1',)
 	  respons = self.send_command(command)
+	  rospy.loginfo('robot started')
     
   def stop(self):
     """Stop the robot."""
-    command = '$0'
+    command = ('$0',)
     respons = self.send_command(command)
+    rospy.loginfo('robot stopped')
     
   def drive(self, cmd_vel):
     """Drive the robot.
@@ -167,7 +172,7 @@ class Robot(object):
     """
     vx, vy, vth = cmd_vel
 
-    cmd = '$2', int(round(vx*1000)), int(round(vy*1000)), int(round(vth*1000))
+    cmd = ('$2', int(round(vx*1000)), int(round(vy*1000)), int(round(vth*1000)))
     rsp = self.send_command(cmd)
     state = tuple(float(x)/1000 for x in rsp[1:])   
     return state
@@ -190,6 +195,7 @@ class RobotNode(object):
     self._pos2d = Pose2D()
     
     self.start()
+    rospy.loginfo('spinning')
     self.spin()
     self.stop()
    
