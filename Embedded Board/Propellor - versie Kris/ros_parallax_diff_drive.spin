@@ -85,7 +85,7 @@ CON
 
   MM_PER_S_TO_CNTS_PER_PIDCYCLE = 20.00 
 
-  DEBUG = 1                                             'Debug flag.
+  DEBUG = 0                                             'Debug flag.
   
   
 OBJ
@@ -136,7 +136,7 @@ PUB main
   'serial.
         
   repeat
-    if serial.rxavail == true
+    'if serial.rxavail == true
       receiveSerial
     'calculateSetpoints
     'setSetpoints
@@ -248,6 +248,7 @@ PRI receiveSerial | val, i, j, messageComplete
         sendSerial(3)
 
       other:
+        sendSerial(0)
         haltRobot
         
   else
@@ -363,6 +364,7 @@ PRI sendSerial (type)
       Serial.str(string(",0,"))
       Serial.dec(actvelRADS)
 
+  Serial.tx(13)
   Serial.tx(10)
 
 PRI calculateSetpoints
