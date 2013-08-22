@@ -137,9 +137,10 @@ pub main
   serial.tx(13) 
   'serial.tx(10)
   repeat
-    'if serial.rxavail == true
+    
     T0 := cnt
-    handleSerial
+    if serial.rxavail == true
+      handleSerial
     elapsedT0 := elapsedus(T0)
 
 
