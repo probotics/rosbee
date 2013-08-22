@@ -1,3 +1,21 @@
+{
+ ************************************************************************************************************
+ *                                                                                                          *
+ *  AUTO-RECOVER NOTICE: This file was automatically recovered from an earlier Propeller Tool session.      *
+ *                                                                                                          *
+ *  ORIGINAL FOLDER:     C:\...\Mechatronica\Desktop\rosbee-2\Embedded Board\Propellor - versie Kris\       *
+ *  TIME AUTO-SAVED:     over 7 days ago (5/14/2013 5:44:33 PM)                                             *
+ *                                                                                                          *
+ *  OPTIONS:             1)  RESTORE THIS FILE by deleting these comments and selecting File -> Save.       *
+ *                           The existing file in the original folder will be replaced by this one.         *
+ *                                                                                                          *
+ *                           -- OR --                                                                       *
+ *                                                                                                          *
+ *                       2)  IGNORE THIS FILE by closing it without saving.                                 *
+ *                           This file will be discarded and the original will be left intact.              *
+ *                                                                                                          *
+ ************************************************************************************************************
+.}
 CON
         _clkmode=xtal1+pll16x
         _xinfreq = 5000000 
@@ -39,7 +57,7 @@ CON
   
 OBJ
   t             : "Timing"
-  PID           : "PID Connect V5_2"             ' PID contr. 4 loops. for wheels
+  PID           : "PID Connect V5_3"             ' PID contr. 4 loops. for wheels
   num             : "simple_numbers"                      ' Number to string conversion
   serial           : "FullDuplexSerial_rr005"              ' PC command and debug interface
   STRs          : "STRINGS2hk"
@@ -73,16 +91,25 @@ pub main
 
   SetPIDPars
 
-  setp[0] :=128
-  setp[1] :=128
+  setp[0] := 30
+  setp[1] := 30
 
   repeat
+    'setp[1] :=10
+    'setp[0] :=10
     serial.char(13)
-    serial.str(string("Motor 0: "))
-    serial.dec(pid.getpidmode(0))
+    serial.str(string("Motor 0 vel: "))
+    serial.dec(pid.GetActVel(0))
     serial.char(13)
-    serial.str(string("Motor 1: "))
-    serial.dec(pid.getpidmode(1))
+    serial.str(string("Motor 1 vel: "))
+    serial.dec(pid.GetActVel(1))
+    serial.char(13)
+    serial.str(string("Qik Error: "))
+    serial.dec(pid.geterror(0))
+    serial.char(13)
+    serial.str(string("PID Time: "))
+    serial.dec(pid.GetPIDTime)
+    
 
 
 
