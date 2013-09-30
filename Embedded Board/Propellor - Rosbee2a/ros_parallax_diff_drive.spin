@@ -47,8 +47,8 @@ CON
   'PIDCTime = 10           ' PID Cycle time ms
 
   'Serial pins QiK
-  TXQ      = 26           ' Serial out to QiC
-  RXQ      = 25           ' Serial in
+  TXQ      = 25           ' Serial out to QiC
+  RXQ      = 26           ' Serial in
 
   'Serial port 
   CR = 13                      
