@@ -50,14 +50,14 @@
     
     <link name="${name}_link">
       <visual>
-      <geometry>
-        <box size="${pan_tilt_length} ${pan_tilt_width} ${pan_tilt_height}"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <material name="darkblue">
-        <color rgba="0.0470 0.0039 0.5019 1"/>
-      </material>
-    </visual>
+        <geometry>
+          <box size="${pan_tilt_length} ${pan_tilt_width} ${pan_tilt_height}"/>
+        </geometry>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <material name="darkblue">
+          <color rgba="0.0470 0.0039 0.5019 1"/>
+        </material>
+      </visual>
     </link>
     
     <joint name="${name}_pitch_joint" type="revolute">
@@ -76,14 +76,14 @@
     
     <link name="${name}_pitch_link">
       <visual>
-      <geometry>
-        <box size="${pan_tilt_pitch_length} ${pan_tilt_pitch_width} ${pan_tilt_pitch_height}"/>
-      </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
-      <material name="white">
-        <color rgba="1 1 1 1"/>
-      </material>
-    </visual>
+        <geometry>
+          <box size="${pan_tilt_pitch_length} ${pan_tilt_pitch_width} ${pan_tilt_pitch_height}"/>
+        </geometry>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <material name="white">
+          <color rgba="1 1 1 1"/>
+        </material>
+      </visual>
     </link>
     
     <joint name="${name}_yaw_joint" type="revolute">
