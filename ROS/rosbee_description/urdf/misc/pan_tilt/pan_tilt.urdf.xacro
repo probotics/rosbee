@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+<robot xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
+       xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+       xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+       xmlns:xacro="http://ros.org/wiki/xacro">
+  
+  <property name="M_PI" value="3.1415926535897931" />
+  
+  <!-- pan_tilt properties -->
+  <property name="pan_tilt_width" value="0.043" />
+  <property name="pan_tilt_length" value="0.052" />
+  <property name="pan_tilt_height" value="0.052" />
+  
+  <!-- pan_tilt_pitch properties -->
+  <property name="pan_tilt_pitch_width" value="0.065" />
+  <property name="pan_tilt_pitch_length" value="0.043" />
+  <property name="pan_tilt_pitch_height" value="0.043" />
+  
+  <property name="pan_tilt_pitch_offset_x" value="0.0" />
+  <property name="pan_tilt_pitch_offset_y" value="-0.064" />
+  <property name="pan_tilt_pitch_offset_z" value="0.017" />
+  
+  <property name="pan_tilt_pitch_velocity" value="0.5" />
+  <property name="pan_tilt_pitch_lower" value="-${(M_PI/2)}" />
+  <property name="pan_tilt_pitch_upper" value="${(M_PI/2)}" />
+  
+  
+  
+  <!-- pan_tilt_yaw properties -->
+  <property name="pan_tilt_yaw_width" value="0.155" />
+  <property name="pan_tilt_yaw_length" value="0.040" />
+  <property name="pan_tilt_yaw_height" value="0.008" />
+  
+  <property name="pan_tilt_yaw_offset_x" value="0.0" />
+  <property name="pan_tilt_yaw_offset_y" value="0.005" />
+  <property name="pan_tilt_yaw_offset_z" value="0.0305" />
+  
+  <property name="pan_tilt_yaw_velocity" value="0.5" />
+  <property name="pan_tilt_yaw_lower" value="-${(M_PI)}" />
+  <property name="pan_tilt_yaw_upper" value="${(M_PI)}" />
+    
+       
+  <xacro:macro name="pan_tilt_kinect" params="name parent *origin">
+    
+    <joint name="${name}_joint" type="fixed">
+      <insert_block name="origin" />
+      <parent link="${parent}_link"/>
+      <child link="${name}_link"/>
+    </joint>
+    
+    <link name="${name}_link">
+      <visual>
+      <geometry>
+        <box size="${pan_tilt_length} ${pan_tilt_width} ${pan_tilt_height}"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <material name="darkblue">
+        <color rgba="0.0470 0.0039 0.5019 1"/>
+      </material>
+    </visual>
+    </link>
+    
+    <joint name="${name}_pitch_joint" type="revolute">
+      <axis xyz="0 1 0"/>
+      <limit effort="1000.0" 
+             lower="${pan_tilt_pitch_lower}" 
+             upper="${pan_tilt_pitch_upper}" 
+             velocity="${pan_tilt_pitch_velocity}"/> 
+      <origin rpy="0 0 0" 
+              xyz="${pan_tilt_pitch_offset_x} 
+                   ${pan_tilt_pitch_offset_y} 
+                   ${pan_tilt_pitch_offset_z}"/>
+      <parent link="${name}_link"/>
+      <child link="${name}_pitch_link"/>
+    </joint>
+    
+    <link name="${name}_pitch_link">
+      <visual>
+      <geometry>
+        <box size="${pan_tilt_pitch_length} ${pan_tilt_pitch_width} ${pan_tilt_pitch_height}"/>
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <material name="white">
+        <color rgba="1 1 1 1"/>
+      </material>
+    </visual>
+    </link>
+    
+    <joint name="${name}_yaw_joint" type="revolute">
+      <axis xyz="0 0 1"/>
+      <limit effort="1000.0" 
+             lower="${pan_tilt_yaw_lower}" 
+             upper="${pan_tilt_yaw_upper}" 
+             velocity="${pan_tilt_yaw_velocity}"/> 
+      <origin rpy="0 0 0" 
+              xyz="${pan_tilt_yaw_offset_x} 
+                   ${pan_tilt_yaw_offset_y} 
+                   ${pan_tilt_yaw_offset_z}"/>
+      <parent link="${name}_pitch_link"/>
+      <child link="${name}_yaw_link"/>
+    </joint>
+    
+    <link name="${name}_yaw_link">
+      <visual>
+        <geometry>
+          <box size="${pan_tilt_yaw_length} ${pan_tilt_yaw_width} ${pan_tilt_yaw_height}"/>
+        </geometry>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <material name="white">
+          <color rgba="1 1 1 1"/>
+        </material>
+      </visual>
+    </link>
+  </xacro:macro>
+       
+       
+</robot>

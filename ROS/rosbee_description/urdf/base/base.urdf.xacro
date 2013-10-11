@@ -1,0 +1,125 @@
+<?xml version="1.0"?>
+<robot xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
+       xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+       xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+       xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <property name="M_PI" value="3.1415926535897931" />
+  
+  <!-- properties values for rosbee2a base -->
+  <!-- base properties -->
+  <property name="base_length" value="0.010" />
+  <property name="base_radius" value="0.240" />
+  <property name="base_height" value="0.101" />
+  
+  <!-- side wheel properties -->
+  <property name="side_wheel_offset_y" value="0.2025" />
+  <property name="side_wheel_radius" value="0.0615" />
+  <property name="side_wheel_length" value="0.020" />
+  
+  <!-- swivel wheel properties -->
+  <property name="swivel_wheel_offset_x" value="0.210" />
+  <property name="swivel_wheel_radius" value="0.035" />
+  <property name="swivel_wheel_length" value="0.060" />
+    
+  <xacro:macro name="rosbee_wheel" params="suffix parent reflect radius length offset_y offset_x">
+  
+    <joint name="${parent}_${suffix}_wheel_joint" type="continuous">
+      <axis xyz="0 1 0" />
+      <!--<insert_block name="origin" />-->
+      <origin xyz="${reflect*offset_x} ${reflect*offset_y} ${-1*(base_height-radius)}" rpy="0 0 0" />
+      <parent link="${parent}_link"/>
+      <child link="${parent}_${suffix}_wheel_link"/>
+    </joint>
+    
+    <link name="${parent}_${suffix}_wheel_link">      
+      <visual>
+        <origin xyz="0 0 0" rpy="${M_PI/2} 0 0" />
+        <geometry>
+          <cylinder radius="${radius}" length="${length}" />
+        </geometry>
+        <material name="lightblue">
+          <color rgba="0.1921 0.5058 0.839 1"/>
+        </material>
+      </visual>      
+    </link>
+      
+  </xacro:macro>
+  
+  
+  
+  <!-- The xacro macro xacro:rosbee_base contains: base and wheels -->
+  <xacro:macro name="rosbee_base" params="name">
+    
+    <link name="${name}_link">
+      <visual>
+        <geometry>
+          <cylinder length="${base_length}" radius="${base_radius}"/>
+        </geometry>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <material name="lightwood">
+          <color rgba="0.8 0.729 0.568 1"/>
+        </material>
+      </visual>
+    </link>
+
+    <!--  base_footprint is a fictitious link(frame) 
+          that is on the ground right below base_link origin, 
+          navigation stack dedpends on this frame -->
+    <link name="${name}_footprint">
+      
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <box size="0.01 0.01 0.01" />
+        </geometry>
+        
+        <material name="White" />
+      </visual>
+    
+    </link>
+  
+    <joint name="${name}_footprint_joint" type="fixed">
+      <origin xyz="0 0 ${base_height}" rpy="0 0 0" />
+      <child link="${name}_link" />
+      <parent link="${name}_footprint"/>
+    </joint>
+  
+    <!-- wheel macros params="suffix parent reflect radius length offset_y offset_x"-->
+    <xacro:rosbee_wheel parent="${name}" 
+                        suffix="l" 
+                        reflect="1" 
+                        radius="${side_wheel_radius}" 
+                        length="${side_wheel_length}" 
+                        offset_y="${side_wheel_offset_y}" 
+                        offset_x="0"/>
+                        
+    <xacro:rosbee_wheel parent="${name}" 
+                        suffix="r" 
+                        reflect="-1" 
+                        radius="${side_wheel_radius}" 
+                        length="${side_wheel_length}" 
+                        offset_y="${side_wheel_offset_y}" 
+                        offset_x="0"/>
+                        
+    <xacro:rosbee_wheel parent="${name}" 
+                        suffix="f" 
+                        reflect="1" 
+                        radius="${swivel_wheel_radius}" 
+                        length="${swivel_wheel_length}" 
+                        offset_y="0" 
+                        offset_x="${swivel_wheel_offset_x}"/>
+                          
+    <xacro:rosbee_wheel parent="${name}" 
+                        suffix="b" 
+                        reflect="-1" 
+                        radius="${swivel_wheel_radius}" 
+                        length="${swivel_wheel_length}" 
+                        offset_y="0" 
+                        offset_x="${swivel_wheel_offset_x}"/>        
+    
+  </xacro:macro>
+  
+</robot>
+
+

@@ -1,0 +1,16 @@
+<package>
+  <description brief="rosbee_description">
+
+     rosbee_description
+
+  </description>
+  <author>Ubuntu 12.04</author>
+  <license>BSD</license>
+  <review status="unreviewed" notes=""/>
+  <url>http://ros.org/wiki/rosbee_description</url>
+  <depend package="urdf"/>
+  <depend package="xacro"/>
+
+</package>
+
+

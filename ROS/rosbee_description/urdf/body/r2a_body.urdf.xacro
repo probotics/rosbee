@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<robot xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
+       xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+       xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+       xmlns:xacro="http://ros.org/wiki/xacro">
+  
+  <!-- body properties -->
+  <property name="body_width" value="0.250" />
+  <property name="body_length" value="0.402" />
+  <property name="body_height" value="0.090" />
+       
+  <xacro:macro name="r2a_body" params="name parent *origin">
+    
+    <joint name="${name}_joint" type="fixed">
+      <insert_block name="origin" />
+      <parent link="${parent}_link"/>
+      <child link="${name}_link"/>
+    </joint>
+    
+    <link name="${name}_link">
+      <visual>
+      <geometry>
+        <box size="${body_length} ${body_width} ${body_height}"/>
+        <!--<mesh filename="package://pr2_description/meshes/torso_v0/torso_lift_L.stl"  />-->
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <material name="grey">
+        <color rgba="0.588 0.588 0.588 1"/>
+      </material>
+    </visual>
+    </link>
+    
+  </xacro:macro>
+       
+       
+</robot>
