@@ -31,7 +31,7 @@
     </link>
     
     <joint name="camera_rgb_optical_joint" type="fixed">
-      <origin xyz="0 0 0" rpy="${-M_PI/2} 0 ${-M_PI/2}" />
+      <origin xyz="0 0 0" rpy="${-M_PI/2} 0 0" />
       <parent link="camera_rgb_frame" />
       <child link="camera_rgb_optical_frame" />
     </joint>
@@ -47,14 +47,14 @@
     </link>
 
     <joint name="camera_joint" type="fixed">
-      <origin xyz="0 0 0" rpy="0 0 ${-M_PI/2}"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <parent link="camera_rgb_frame"/>
       <child link="camera_link"/>
     </joint>  
   
     <link name="camera_link">
       <visual>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <origin xyz="0 0 0" rpy="0 0 ${M_PI/2}"/>
         <geometry>
           <!--<box size="${kinect_length} ${kinect_width} ${kinect_height}"/>-->
           <mesh filename="package://rosbee_description/meshes/kinect_base_merged_kinect.stl" scale="0.001 0.001 0.001"/>
