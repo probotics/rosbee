@@ -17,8 +17,8 @@
   <property name="pan_tilt_pitch_height" value="0.043" />
   
   <property name="pan_tilt_pitch_offset_x" value="0.0" />
-  <property name="pan_tilt_pitch_offset_y" value="-0.064" />
-  <property name="pan_tilt_pitch_offset_z" value="0.017" />
+  <property name="pan_tilt_pitch_offset_y" value="-0.014" />
+  <property name="pan_tilt_pitch_offset_z" value="0.0157" />
   
   <property name="pan_tilt_pitch_velocity" value="0.5" />
   <property name="pan_tilt_pitch_lower" value="-${(M_PI/2)}" />
@@ -32,8 +32,8 @@
   <property name="pan_tilt_yaw_height" value="0.008" />
   
   <property name="pan_tilt_yaw_offset_x" value="0.0" />
-  <property name="pan_tilt_yaw_offset_y" value="0.005" />
-  <property name="pan_tilt_yaw_offset_z" value="0.0305" />
+  <property name="pan_tilt_yaw_offset_y" value="0.0125" />
+  <property name="pan_tilt_yaw_offset_z" value="0.017" />
   
   <property name="pan_tilt_yaw_velocity" value="0.5" />
   <property name="pan_tilt_yaw_lower" value="-${(M_PI)}" />
@@ -51,9 +51,10 @@
     <link name="${name}_link">
       <visual>
         <geometry>
-          <box size="${pan_tilt_length} ${pan_tilt_width} ${pan_tilt_height}"/>
+          <!--<box size="${pan_tilt_length} ${pan_tilt_width} ${pan_tilt_height}"/>-->
+          <mesh filename="package://rosbee_description/meshes/kinect_base_merged_pitch.stl" scale="0.001 0.001 0.001"/>
         </geometry>
-        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <origin rpy="0 0 ${M_PI/2}" xyz="0 0 0"/>
         <material name="darkblue">
           <color rgba="0.0470 0.0039 0.5019 1"/>
         </material>
@@ -77,9 +78,10 @@
     <link name="${name}_pitch_link">
       <visual>
         <geometry>
-          <box size="${pan_tilt_pitch_length} ${pan_tilt_pitch_width} ${pan_tilt_pitch_height}"/>
+          <!--<box size="${pan_tilt_pitch_length} ${pan_tilt_pitch_width} ${pan_tilt_pitch_height}"/>-->
+          <mesh filename="package://rosbee_description/meshes/kinect_base_merged_yaw.stl" scale="0.001 0.001 0.001"/>
         </geometry>
-        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <origin rpy="0 0 ${M_PI/2}" xyz="0 0 0"/>
         <material name="white">
           <color rgba="1 1 1 1"/>
         </material>
@@ -101,6 +103,7 @@
     </joint>
     
     <link name="${name}_yaw_link">
+      <!--
       <visual>
         <geometry>
           <box size="${pan_tilt_yaw_length} ${pan_tilt_yaw_width} ${pan_tilt_yaw_height}"/>
@@ -110,6 +113,7 @@
           <color rgba="1 1 1 1"/>
         </material>
       </visual>
+      -->
     </link>
   </xacro:macro>
        
