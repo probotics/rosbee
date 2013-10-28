@@ -1,0 +1,16 @@
+<launch>
+    <param name="/use_sim_time" value="false" />
+
+    <!-- publish robot model -->
+    <param name="robot_description" command="$(find xacro)/xacro.py '$(find rosbee_description)/robots/rosbee2a.urdf.xacro'" />
+
+    <!-- start robot state publisher node -->
+	<node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+    
+    <!-- start the fake robot controller node -->
+    <node name="arbotix" pkg="arbotix_python" type="arbotix_driver" output="screen">
+        <rosparam file="$(find rosbee2_configs)/yaml/fake_rosbee2a.yaml" command="load" />
+        <param name="sim" value="true"/>
+    </node>
+
+</launch>

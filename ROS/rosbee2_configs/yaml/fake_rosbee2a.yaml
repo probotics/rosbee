@@ -1,0 +1,13 @@
+rate: 50
+timeout: 1
+
+joints: {
+    pan_tilt_yaw_joint: {id: 1, neutral: 512, max_speed: 100, min_angle: -145, max_angle: 145, invert: False},
+    pan_tilt_pitch_joint: {id: 2, neutral: 512, max_speed: 100, min_angle: -90, max_angle: 90, invert: False}
+}
+
+controllers: {
+    # base_width and ticks_meter are not used in fake robot mode but must be defined
+    base_controller: {type: diff_controller, base_frame_id: base_footprint, odom_frame_id: odom, base_width: 0.405, ticks_meter: 4100 },
+    pan_tilt_controller: {type: follow_controller, joints: [pan_tilt_yaw_joint, pan_tilt_pitch_joint] }
+}

@@ -1,0 +1,58 @@
+<launch>
+
+    <param name="/use_sim_time" value="false" />
+
+    <!-- publish robot model -->
+    <param name="robot_description" command="$(find xacro)/xacro.py '$(find rosbee_description)/robots/rosbee2a.urdf.xacro'" />
+
+    <!-- start robot state publisher node -->
+	<node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+
+    <!-- Publish fake wheel states -->
+    <node name="fake_wheels" pkg="rosbee2_configs" type="fake_pub.py" />
+	
+	<!-- start the robot node for communication between ROS and Parallax -->
+	<include file="$(find rosbee2)/robot_node.launch" />
+	
+	<!-- start Kinect -->
+	<include file="$(find turtlebot_bringup)/launch/3dsensor.launch">
+		<arg name="depth_registration" value="false"/>
+	</include>
+
+    <!-- Load the Pan/Tilt joint controller configuration from a YAML file -->
+    <rosparam file="$(find rosbee2_configs)/yaml/dynamixel_rosbee2a.yaml" command="load"/>
+
+   <!-- Start the Dynamixel low-level driver manager with parameters -->
+   <node name="dynamixel_manager" pkg="dynamixel_controllers"
+      type="controller_manager.py" required="true" output="screen">
+      <rosparam>
+         namespace: rosbee_dynamixel_manager
+         serial_ports:
+            dynamixel_ax12:
+               port_name: /dev/ttyUSB0
+               baud_rate: 1000000
+               min_motor_id:  1
+               max_motor_id: 30
+               update_rate: 20
+      </rosparam>
+   </node>
+
+
+   <!-- Start the head pan and tilt controllers -->
+   <node name="dynamixel_controller_spawner_ax12" pkg="dynamixel_controllers"
+   type="controller_spawner.py"
+        args="--manager=rosbee_dynamixel_manager
+              --port=dynamixel_ax12
+              --type=simple
+        head_pan_controller
+        head_tilt_controller"
+        output="screen" />
+
+   <!-- Start the Dynamixel Joint States Publisher -->
+   <node name="dynamixel_joint_states_publisher" pkg="rosbee2_configs" type="dynamixel_joint_state_publisher.py" output="screen" />
+
+   <!-- Start all Dynamixels in the relaxed state -->
+   <node pkg="rosbee2_configs" type="relax_all_servos.py" name="relax_all_servos" />
+
+		
+</launch>
