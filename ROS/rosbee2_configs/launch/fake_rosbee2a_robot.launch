@@ -6,6 +6,9 @@
 
     <!-- start robot state publisher node -->
 	<node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+
+    <!-- Publish fake wheel states -->
+    <node name="fake_wheels" pkg="rosbee2_configs" type="fake_pub.py" />
     
     <!-- start the fake robot controller node -->
     <node name="arbotix" pkg="arbotix_python" type="arbotix_driver" output="screen">
