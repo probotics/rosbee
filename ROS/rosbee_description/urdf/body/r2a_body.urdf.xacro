@@ -20,8 +20,7 @@
     <link name="${name}_link">
       <visual>
       <geometry>
-        <box size="${body_length} ${body_width} ${body_height}"/>
-        <!--<mesh filename="package://pr2_description/meshes/torso_v0/torso_lift_L.stl"  />-->
+        <box size="${body_length} ${body_width} ${body_height}"/>        
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="grey">

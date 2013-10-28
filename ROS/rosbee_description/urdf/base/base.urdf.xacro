@@ -8,12 +8,12 @@
   
   <!-- properties values for rosbee2a base -->
   <!-- base properties -->
-  <property name="base_length" value="0.010" />
+  <property name="base_length" value="0.009" />
   <property name="base_radius" value="0.240" />
-  <property name="base_height" value="0.101" />
+  <property name="base_height" value="0.101" /><!--distance floor to base plate + base_length/2-->
   
   <!-- side wheel properties -->
-  <property name="side_wheel_offset_y" value="0.2025" />
+  <property name="side_wheel_offset_y" value="0.202" />
   <property name="side_wheel_radius" value="0.0615" />
   <property name="side_wheel_length" value="0.020" />
   
@@ -54,9 +54,10 @@
     <link name="${name}_link">
       <visual>
         <geometry>
-          <cylinder length="${base_length}" radius="${base_radius}"/>
+          <!--<cylinder length="${base_length}" radius="${base_radius}"/>-->
+          <mesh filename="package://rosbee_description/meshes/rosbee_base.stl" scale="0.01 0.01 0.01"/>
         </geometry>
-        <origin rpy="0 0 0" xyz="0 0 0"/>
+        <origin rpy="${M_PI/2} 0 0" xyz="0 0 0"/>
         <material name="lightwood">
           <color rgba="0.8 0.729 0.568 1"/>
         </material>

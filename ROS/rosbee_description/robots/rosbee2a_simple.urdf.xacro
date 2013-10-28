@@ -12,10 +12,10 @@
   <include filename="$(find rosbee_description)/urdf/body/r2a_body.urdf.xacro" />
   
   <!-- Rosbee 2a pan tilt -->
-  <include filename="$(find rosbee_description)/urdf/misc/pan_tilt/pan_tilt.urdf.xacro" />
+  <include filename="$(find rosbee_description)/urdf/misc/pan_tilt/pan_tilt_simple.urdf.xacro" />
   
   <!-- Rosbee 2a kinect -->
-  <include filename="$(find rosbee_description)/urdf/sensors/kinect/kinect.urdf.xacro" />
+  <include filename="$(find rosbee_description)/urdf/sensors/kinect/kinect_simple.urdf.xacro" />
   
   
   <xacro:rosbee_base name="base"/>
@@ -25,14 +25,13 @@
   </xacro:r2a_body>
       
   <xacro:pan_tilt_kinect name="pan_tilt" parent="body">
-    <origin xyz="0.1675 0 0.073" rpy="0 0 0"/>
+    <origin xyz="0.171 0.055 0.0715" rpy="0 0 0"/>
   </xacro:pan_tilt_kinect>
   
   
   
   <xacro:sensor_kinect parent="pan_tilt_yaw_link">
-    <origin xyz="-0.0011 -0.0003 0.03" rpy="0 0 0"/>    
-    <!-- <origin xyz="-0.0011 -0.0003 0.03" rpy="0 0 0"/> -->
+    <origin xyz="0 0 0.0287" rpy="0 0 0"/> <!-- z = 38/2 + 8/2 + 5.7 -->
   </xacro:sensor_kinect>
                   
 
