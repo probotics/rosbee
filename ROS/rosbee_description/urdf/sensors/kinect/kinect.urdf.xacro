@@ -54,13 +54,13 @@
   
     <link name="camera_link">
       <visual>
-        <origin xyz="0 0 0" rpy="0 0 ${M_PI/2}"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
           <!--<box size="${kinect_length} ${kinect_width} ${kinect_height}"/>-->
-          <mesh filename="package://rosbee_description/meshes/kinect_base_merged_kinect.stl" scale="0.001 0.001 0.001"/>
+          <mesh filename="package://rosbee_description/meshes/kinect.stl" scale="0.001 0.001 0.001"/>
         </geometry>
-        <material name="white">
-          <color rgba="1 1 1 1"/>
+        <material name="black">
+          <color rgba="0 0 0 1"/>
         </material>
       </visual>	    
     </link>

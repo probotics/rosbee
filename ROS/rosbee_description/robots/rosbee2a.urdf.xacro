@@ -25,13 +25,13 @@
   </xacro:r2a_body>
       
   <xacro:pan_tilt_kinect name="pan_tilt" parent="body">
-    <origin xyz="0.1675 0 0.073" rpy="0 0 0"/>
+    <origin xyz="-0.1675 0 0.073" rpy="0 0 3.14"/>
   </xacro:pan_tilt_kinect>
   
   
   
   <xacro:sensor_kinect parent="pan_tilt_yaw_link">
-    <origin xyz="-0.0011 -0.0003 0.03" rpy="0 0 0"/>    
+    <origin xyz="-0.0000 -0.0000 0.0287" rpy="0 0 3.14"/>    
     <!-- <origin xyz="-0.0011 -0.0003 0.03" rpy="0 0 0"/> -->
   </xacro:sensor_kinect>
                   
