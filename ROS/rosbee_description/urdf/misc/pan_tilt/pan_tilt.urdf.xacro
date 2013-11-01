@@ -33,7 +33,7 @@
   
   <property name="pan_tilt_yaw_offset_x" value="-0.0004" />
   <property name="pan_tilt_yaw_offset_y" value="-0.0000" />
-  <property name="pan_tilt_yaw_offset_z" value="0.0300" />
+  <property name="pan_tilt_yaw_offset_z" value="0.0295" />
   
   <property name="pan_tilt_yaw_velocity" value="0.5" />
   <property name="pan_tilt_yaw_lower" value="-${(M_PI)}" />
@@ -54,7 +54,7 @@
           <!--<box size="${pan_tilt_length} ${pan_tilt_width} ${pan_tilt_height}"/>-->
           <mesh filename="package://rosbee_description/meshes/pan_tilt_base.stl" scale="0.001 0.001 0.001"/>
         </geometry>
-        <origin rpy="0 0 ${M_PI}" xyz="0 0 0"/>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
         <material name="darkblue">
           <color rgba="0.0470 0.0039 0.5019 1"/>
         </material>
@@ -81,7 +81,7 @@
           <!--<box size="${pan_tilt_pitch_length} ${pan_tilt_pitch_width} ${pan_tilt_pitch_height}"/>-->
           <mesh filename="package://rosbee_description/meshes/pan_tilt_pitch.stl" scale="0.001 0.001 0.001"/>
         </geometry>
-        <origin rpy="0 0 ${M_PI}" xyz="0 0 0"/>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
         <material name="blue">
           <color rgba="0.0470 0.0039 0.5019 1"/>
         </material>
@@ -108,7 +108,7 @@
           <!--<box size="${pan_tilt_yaw_length} ${pan_tilt_yaw_width} ${pan_tilt_yaw_height}"/>-->
           <mesh filename="package://rosbee_description/meshes/pan_tilt_yaw.stl" scale="0.001 0.001 0.001"/>
         </geometry>
-        <origin rpy="0 0 ${M_PI}" xyz="0 0 0"/>
+        <origin rpy="0 0 0" xyz="0 0 0"/>
         <material name="white">
           <color rgba="1 1 1 1"/>
         </material>
