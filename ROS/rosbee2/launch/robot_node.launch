@@ -15,7 +15,7 @@
     <param name="max_abs_yaw_vel" value="3.14"/>
     <param name="publish_tf" value="false"/>
     <param name="odom_frame" value="odom"/> 
-    <param name="base_frame" value="base_link"/>
+    <param name="base_frame" value="base_footprint"/>
     <param name="odom_angular_scale_correction" value="1.0"/>
     <param name="odom_linear_scale_correction" value="1.0"/>
 	<remap from="cmd_vel" to="mobile_base/commands/velocity" />
