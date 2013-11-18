@@ -18,6 +18,7 @@
 	<include file="$(find turtlebot_bringup)/launch/3dsensor.launch">
 		<arg name="depth_registration" value="false"/>
 	</include>
+	<include file="$(find openni_launch)/launch/kinect_frames.launch"/>
 
     <!-- Load the Pan/Tilt joint controller configuration from a YAML file -->
     <rosparam file="$(find rosbee2_configs)/yaml/dynamixel_rosbee2a.yaml" command="load"/>
@@ -36,7 +37,6 @@
                update_rate: 20
       </rosparam>
    </node>
-
 
    <!-- Start the head pan and tilt controllers -->
    <node name="dynamixel_controller_spawner_ax12" pkg="dynamixel_controllers"
