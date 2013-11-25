@@ -1,6 +1,6 @@
 joints: ['pan_tilt_yaw_joint', 'pan_tilt_pitch_joint']
 
-head_pan_controller:
+pan_tilt_yaw_joint:
     controller:
         package: dynamixel_controllers
         module: joint_position_controller
@@ -13,7 +13,7 @@ head_pan_controller:
         min: 0
         max: 1024
 
-head_tilt_controller:
+pan_tilt_pitch_joint:
     controller:
         package: dynamixel_controllers
         module: joint_position_controller

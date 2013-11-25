@@ -44,8 +44,8 @@
         args="--manager=rosbee_dynamixel_manager
               --port=dynamixel_ax12
               --type=simple
-        head_pan_controller
-        head_tilt_controller"
+        pan_tilt_yaw_joint
+        pan_tilt_pitch_joint"
         output="screen" />
 
    <!-- Start the Dynamixel Joint States Publisher -->
