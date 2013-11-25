@@ -12,7 +12,7 @@
     <param name="connection_timeout" value="60"/>
     <param name="cmd_vel_timeout" value="0.6"/>
     <param name="min_abs_yaw_vel" value="0.1"/>
-    <param name="max_abs_yaw_vel" value="3.14"/>
+    <param name="max_abs_yaw_vel" value="2.0"/>
     <param name="publish_tf" value="false"/>
     <param name="odom_frame" value="odom"/> 
     <param name="base_frame" value="base_footprint"/>
