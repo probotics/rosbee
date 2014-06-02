@@ -69,10 +69,10 @@ CON
   PIDCTIME = 10.0                                         ' PID Cycle time ms
 
   
-  WHEEL_BASE_WIDTH = 0.420 ' Rosbee II #2' 0.368 ' Rosbee II #1                              'M
+  WHEEL_BASE_WIDTH = 0.332 ' Rosbee II #3' 0.420 ' Rosbee II #2' 0.368 ' Rosbee II #1      'M
   
-  COUNTS_PER_ROTATION =  1856.0
-  WHEEL_CIRCUMFERENCE = 123.0 * PI                      'MM
+  COUNTS_PER_ROTATION =  3200.0
+  WHEEL_CIRCUMFERENCE = 124.0 * PI                      'MM
   
   COUNTS_PER_MM = COUNTS_PER_ROTATION / WHEEL_CIRCUMFERENCE
   MM_PER_COUNT = WHEEL_CIRCUMFERENCE / COUNTS_PER_ROTATION
@@ -82,8 +82,10 @@ CON
   '>>> 20 counts per PID Cycle when the wheel is traveling at 1000mm/s
   '>>> The Setpoint for this wheel will be set to 20  
   CONVERSIONFACTOR = (WHEEL_CIRCUMFERENCE / (COUNTS_PER_ROTATION / (1000.0/PIDCTIME)))  
+  MM_PER_S_TO_CNTS_PER_PIDCYCLE = CONVERSIONFACTOR
 
-  MM_PER_S_TO_CNTS_PER_PIDCYCLE = 20.00 
+  RIGHTMOTOR = 0                'change this to redefine front (x-axis) of robot
+  LEFTMOTOR = 1                 'change this to redefine front (x-axis) of robot  
 
   DEBUG = 0                                             'Debug flag.
   
@@ -181,8 +183,8 @@ PRI init  | PIDTime
   if(DEBUG) '<--------------------------------------------------'<-------------------------------------------------- 
       serial.str(string("CONVERSIONFACTOR:"))
       serial.dec(f32.FTrunc(CONVERSIONFACTOR))
-      serial.tx(13) 
-      serial.tx(10)  
+      serial.tx(CR) 
+      serial.tx(LF)  
 
 PRI receiveSerial | val, i, j, messageComplete
   {{
@@ -253,8 +255,8 @@ PRI receiveSerial | val, i, j, messageComplete
   else
     serial.str(string("Error with errno: "))
     serial.dec(error)
-    serial.tx(13) 
-    serial.tx(10)
+    serial.tx(CR) 
+    serial.tx(LF)
          
 PRI parseParam | vx_,vy_,rot_
   {{
@@ -303,8 +305,8 @@ PRI parseParam | vx_,vy_,rot_
       serial.str(string("Error encountered, halting..."))
       serial.str(string("Errno: "))
       serial.dec(error)
-      serial.tx(13) 
-      serial.tx(10)     
+      serial.tx(CR) 
+      serial.tx(LF)     
 
 PRI parseNumber(term) : value | n, i, done, hasError
   {{
@@ -346,8 +348,8 @@ PRI parseNumber(term) : value | n, i, done, hasError
   if(DEBUG)   '<--------------------------------------------------'<--------------------------------------------------
     serial.str(string("Value: "))
     serial.dec(value)
-    serial.tx(13) 
-    serial.tx(10)    
+    serial.tx(CR) 
+    serial.tx(LF)    
   return value  
 
 PRI sendSerial (type)
@@ -363,48 +365,70 @@ PRI sendSerial (type)
       Serial.str(string(",0,"))
       Serial.dec(actvelRADS)
 
-  Serial.tx(10)
+  Serial.tx(LF)
 
-PRI calculateSetpoints
+PRI calculateSetpoints | diff
   {{
-    Move the platform with the given vx and rotation.
-    This calculates the setpoints for each wheel and sets it to the setp array for the PID cog. The PID cog then uses this for the platform control 
+    Calculates the Setpoint Values for each wheel based on the velocities for the whole platform stored in the Global Variables vx and rot.
+    The setpoint values are stored in the Global Variables setpL (left wheel) and setpR (right Wheel)
+    
 
-    Parameters:
       vx: vertical velocity (mm/s)
       rot: rotational velocity  (mrad/s)
     Returns: none
 
     Modifies:
-      Setp: the setpoint is set according to the vx and rot
+
+      setpL: the setpoint is set according to the vx and rot
+      setpR: the setpoint is set according to the vx and rot
+
+    Used Formula:
+        diff = rot * WHEEL_BASE/2
+        left = (vx - diff)/MM_PER_S_TO_CNTS_PER_PIDCYCLE)
+        right = (vx + diff)/MM_PER_S_TO_CNTS_PER_PIDCYCLE)
    
     Possible pitfall is concurrency on the setp array, where the PID cog might read one fresh value and one old value
     as there is no proper way to mark the array as synchronized / volatile without adding semaphores to this cog and the PID cog.
   }}
   
-  ' left = round((vx + WHEEL_BASE_WIDTH/2 *rot)/MM_PER_S_TO_CNTS_PER_PIDCYCLE)
-  ' right = round((vx - WHEEL_BASE_WIDTH/2 *rot)/MM_PER_S_TO_CNTS_PER_PIDCYCLE)
-  
-  setpL := f32.fround(f32.fdiv(f32.fadd(f32.ffloat(vx) , f32.fmul( f32.fdiv( constant(WHEEL_BASE_WIDTH), f32.ffloat(2)) , f32.ffloat(rot) )),f32.ffloat(20))) ' = round(500 - (wheel base width * 100))
-  setpR := f32.fround(f32.fdiv(f32.fsub(f32.ffloat(vx) , f32.fmul( f32.fdiv( constant(WHEEL_BASE_WIDTH), f32.ffloat(2))  , f32.ffloat(rot) )),f32.ffloat(20)))
+  setpL := f32.fround( f32.fdiv(f32.fsub(f32.ffloat(vx), f32.fdiv( f32.fmul(f32.ffloat(rot), WHEEL_BASE_WIDTH), 2.0 )), MM_PER_S_TO_CNTS_PER_PIDCYCLE) )
+  setpR := f32.fround( f32.fdiv(f32.fadd(f32.ffloat(vx), f32.fdiv( f32.fmul(f32.ffloat(rot), WHEEL_BASE_WIDTH), 2.0 )), MM_PER_S_TO_CNTS_PER_PIDCYCLE) )
+
   
 PRI setSetpoints
-
-  if setpL < 129 and setpL > -129 ' only update setpoints if the setpoint is in R{-128, 128}     
-    setp[0] := setpL
-
-  if setpR < 129 and setpR > -129  
-    setp[1] := setpR * -1 ''Invert right wheel direction                              
-
-PRI calculateCurrentVelocity   | PIDpS, velL, velR, velMMS, velRADS
   {{
-    Return the actual velocity over serial to the controller PC
+    Checks the global setpoint values for each wheel to be in a certain range.
+    These values are then stored in the setpoint array (setp). This array is read by the PID Cog. 
 
-    ' left = round((vx - WHEEL_BASE_WIDTH/2 *rot)/MM_PER_S_TO_CNTS_PER_PIDCYCLE)
-    ' right = round((vx + WHEEL_BASE_WIDTH/2 *rot)/MM_PER_S_TO_CNTS_PER_PIDCYCLE)
+
+    Possible pitfall is concurrency on the setp array, where the PID cog might read one fresh value and one old value
+    as there is no proper way to mark the array as synchronized / volatile without adding semaphores to this cog and the PID cog.
+  }}
+
+  setp[RIGHTMOTOR] := -128 #> setpR <# 128   'Set and Limit setpoint to range {-128, 128}
+  'if setpR < 129 and setpR > -129 ' only update setpoints if the setpoint is in R{-128, 128}     
+  '  setp[0] := setpR
+
+  setp[LEFTMOTOR] := -128 #> -setpL <# 128  'Set and Limit setpoint to range {-128, 128}
+
+   if(DEBUG)   '<--------------------------------------------------'<--------------------------------------------------
+    serial.str(string("setp[0]: "))
+    serial.dec(setp[0])
+    serial.tx(CR) 
+    serial.tx(LF)
+    serial.str(string("setp[1]: "))
+    serial.dec(setp[1])
+    serial.tx(CR) 
+    serial.tx(LF)    
     
-    setpL := f32.fround(f32.fdiv(f32.fadd(f32.ffloat(vx) , f32.fmul( f32.fdiv( constant(WHEEL_BASE_WIDTH), f32.ffloat(2)) , f32.ffloat(rot) )),MM_PER_S_TO_CNTS_PER_PIDCYCLE)) ' = round(500 - (wheel base width * 100))
-    setpR := f32.fround(f32.fdiv(f32.fsub(f32.ffloat(vx) , f32.fmul( f32.fdiv( constant(WHEEL_BASE_WIDTH), f32.ffloat(2))  , f32.ffloat(rot) )),MM_PER_S_TO_CNTS_PER_PIDCYCLE))
+PRI calculateCurrentVelocity  | countL, countR
+  {{
+    Calculates the current velocities (forward velocity in mm/s, and rotation velocity in mrad/s) of the robot.
+    Based on the amount of encoder ticks read by the PID Cog in one PID Cycle.
+
+    
+    The Calculated values are stored in the global variables actVelMMS and actVelRadS. 
+    These Variables are read by the sendSerial method, were they are send back to the Notebook.
 
     Long actVelMMS 'Long used to store actual speed in mm/s for feedback over serial
     Long actVelRadS 'Long used to store actual rotation speed in mrad/s for feedback over serial                                     
@@ -417,30 +441,18 @@ PRI calculateCurrentVelocity   | PIDpS, velL, velR, velMMS, velRADS
             self.dx = d / elapsed
             self.dr = th / elapsed
  
+    actVelMMS  = ((countsleft+countsright)*MM_PER_S_TO_CNTS_PER_PIDCYCLE)/2
+    actVelRadS = ((countsright-countsleft)*MM_PER_S_TO_CNTS_PER_PIDCYCLE)/WHEEL_BASE_WIDTH
     
   }}
 
-  actVelMMS  := 0
-  actVelRadS := 0
-  
-  
+  countR := PID.GetActVel(RIGHTMOTOR)
+  countL := -PID.GetActVel(LEFTMOTOR)
 
-  actVelMMS  := f32.fround(f32.fdiv(f32.fmul(f32.fadd(f32.ffloat(PID.GetActVel(0)) ,f32.ffloat(-PID.GetActVel(1)) ),f32.ffloat(20)), f32.ffloat(2)))
-  actVelRadS := f32.fround(f32.fdiv(f32.fmul(f32.fsub(f32.ffloat(PID.GetActVel(0)) ,f32.ffloat(-PID.GetActVel(1)) ),f32.ffloat(20)),constant(WHEEL_BASE_WIDTH)))
+  actVelMMS  := f32.fround(f32.fdiv(f32.fmul(f32.ffloat(countR+countL),MM_PER_S_TO_CNTS_PER_PIDCYCLE), 2.0))
+  actVelRadS := f32.fround(f32.fdiv(f32.fmul(f32.ffloat(countR-countL),MM_PER_S_TO_CNTS_PER_PIDCYCLE), WHEEL_BASE_WIDTH))
 
-  'PIDpS := 100 
-
-  'velL :=  f32.fround(f32.fmul(f32.fmul(f32.ffloat(-PID.GetActVel(1)),f32.ffloat(PIDpS)),MM_PER_COUNT))
-  'velR :=  f32.fround(f32.fmul(f32.fmul(f32.ffloat(PID.GetActVel(0)),f32.ffloat(PIDpS)),MM_PER_COUNT))
-
-
-  'actVelMMS := (velL + velR) / 2
-  'actVelRadS := f32.fround(f32.fdiv(f32.fsub(f32.fmul(f32.fmul(f32.ffloat(PID.GetActVel(0)),f32.ffloat(PIDpS)),MM_PER_COUNT),f32.fmul(f32.fmul(f32.ffloat(-PID.GetActVel(1)),f32.ffloat(PIDpS)),MM_PER_COUNT)), WHEEL_BASE_WIDTH))
-
-
-
-
-  
+   
 PRI haltRobot
 
   vx         := 0
@@ -467,8 +479,9 @@ PRI setPIDPars
   PID.SetPosScale(0,1)
   PID.SetFeMax(0,200)
   PID.SetMaxCurr(0,4500)
-  PID.SetInvert(0,1,1,-1)  ' #pid, position, velocity, output        
-  
+  PID.SetInvert(0,1,1,-1)  ' #pid, position, velocity, output
+  PID.SetPIDMode(0,1) 'velocity loop
+
   PID.SetKi(1,800)
   PID.SetK(1,1000)
   PID.SetKp(1,1000)
@@ -476,5 +489,5 @@ PRI setPIDPars
   PID.SetPosScale(1,1)
   PID.SetFeMax(1,200)
   PID.SetMaxCurr(1,4500)
-  PID.SetInvert(0,1,1,-1)  ' #pid, position, velocity, output     
-                        
+  PID.SetInvert(1,1,1,-1)  ' #pid, position, velocity, output     
+  PID.SetPIDMode(1,1) 'velocity loop   
