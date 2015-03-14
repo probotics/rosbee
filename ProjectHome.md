@@ -1,0 +1,1 @@
+The Rosbee project aims to create a robot platform that is  capable of navigating and mapping its environment autonomously.
