@@ -5,8 +5,8 @@
   <node pkg="rosbee_node" type="robot_node.py" name="rosbee_node" respawn="true">
     <param name="verbose" value="false"/>
     <param name="update_rate" value="50"/>
-    <param name="fake_connection" value="false"/>
-    <param name="fake_respons" value="false"/>
+    <param name="fake_connection" value="true"/>
+    <param name="fake_respons" value="true"/>
     <param name="port" value="/dev/ttyUSB0"/> 
     <param name="baudrate" value="115200"/>
     <param name="connection_timeout" value="60"/>

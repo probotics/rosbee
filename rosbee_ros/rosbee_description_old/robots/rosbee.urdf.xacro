@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<robot xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
+       xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+       xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+       xmlns:xacro="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+       name="rosbee2a" >
+       
+  <!-- Rosbee base -->
+  <xacro:include filename="$(find rosbee_description)/urdf/base/base.urdf.xacro" />
+  
+  <!-- Rosbee 2a body -->
+  <!--<xacro:include filename="$(find rosbee_description)/urdf/body/r2a_body.urdf.xacro" />-->
+  
+  <!-- Rosbee 2a pan tilt -->
+  <!--<xacro:include filename="$(find rosbee_description)/urdf/misc/pan_tilt/pan_tilt.urdf.xacro" />-->
+  
+  <!-- Rosbee 2a kinect -->
+  <xacro:include filename="$(find rosbee_description)/urdf/sensors/kinect/kinect.urdf.xacro" />
+  
+  
+  <xacro:rosbee_base name="base"/>
+  
+  <!--<xacro:r2a_body name="body" parent="base">
+    <origin xyz="0 0 0.0495" rpy="0 0 0" />
+  </xacro:r2a_body>-->
+      
+  <!--<xacro:pan_tilt_kinect name="pan_tilt" parent="body">
+    <origin xyz="-0.1675 0 0.073" rpy="0 0 0"/>
+  </xacro:pan_tilt_kinect>-->
+    
+  <xacro:sensor_kinect parent="base_link">
+    <origin xyz="0.10 0.0000 0.0" rpy="0 0 0"/>    
+    <!-- <origin xyz="-0.0011 -0.0003 0.03" rpy="0 0 0"/> -->
+  </xacro:sensor_kinect>
+                  
+
+</robot>
