@@ -2,7 +2,7 @@
 <package>
   <name>rosbee</name>
   <version>0.0.1</version>
-  <description>The rosbee package</description>
+  <description>The rosbee metapackage</description>
   <maintainer email="kris@todo.todo">kris</maintainer>
   <license>TODO</license>
   

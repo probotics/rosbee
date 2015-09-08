@@ -2,8 +2,8 @@
 
 <launch>
   <!-- The Robot Node -->
-  <node pkg="rosbee2" type="robot_node.py" name="rosbee2" respawn="true">
-    <param name="verbose" value="true"/>
+  <node pkg="rosbee_node" type="robot_node.py" name="rosbee_node" respawn="true">
+    <param name="verbose" value="false"/>
     <param name="update_rate" value="50"/>
     <param name="fake_connection" value="false"/>
     <param name="fake_respons" value="false"/>
@@ -18,11 +18,11 @@
     <param name="base_frame" value="base_footprint"/>
     <param name="odom_angular_scale_correction" value="1.0"/>
     <param name="odom_linear_scale_correction" value="1.0"/>
-	<remap from="cmd_vel" to="mobile_base/commands/velocity" />
+	<!--<remap from="cmd_vel" to="mobile_base/commands/velocity" />-->
   </node>
 
   <!-- Odometry estimator -->
-  <node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf">
+  <!--<node pkg="robot_pose_ekf" type="robot_pose_ekf" name="robot_pose_ekf">
     <remap from="imu_data" to="imu/data"/>
     <param name="freq" value="10.0"/>
     <param name="sensor_timeout" value="1.0"/>
@@ -31,14 +31,16 @@
     <param name="imu_used" value="false"/>
     <param name="vo_used" value="false"/>
     <param name="output_frame" value="odom"/>
-  </node>
+  </node>-->
 
+  
   <!-- velocity commands multiplexer -->
-  <node pkg="nodelet" type="nodelet" name="mobile_base_nodelet_manager" args="manager"/>
+  <!--<node pkg="nodelet" type="nodelet" name="mobile_base_nodelet_manager" args="manager"/>-->
   <!--<node pkg="nodelet" type="nodelet" name="cmd_vel_mux" args="load cmd_vel_mux/CmdVelMuxNodelet mobile_base_nodelet_manager">-->
-	<node pkg="nodelet" type="nodelet" name="cmd_vel_mux" args="load yocs_cmd_vel_mux/CmdVelMuxNodelet mobile_base_nodelet_manager">
+	<!--<node pkg="nodelet" type="nodelet" name="cmd_vel_mux" args="load yocs_cmd_vel_mux/CmdVelMuxNodelet mobile_base_nodelet_manager">
     <param name="yaml_cfg_file" value="$(find rosbee2)/param/mux.yaml"/>
     <remap from="cmd_vel_mux/output" to="mobile_base/commands/velocity"/>
-  </node>
+  </node>-->
+  
 
 </launch>

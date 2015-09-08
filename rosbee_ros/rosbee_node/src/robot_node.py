@@ -33,7 +33,7 @@
 #
 # Revision $Id$
 
-PACKAGE = 'rosbee2' # this package name
+PACKAGE = 'rosbee_node' # this package name
 NAME = 'robot_node' # this node name
 
 """
@@ -44,7 +44,7 @@ Robot node for ROS.
 """
 
 # ROS imports
-import roslib; roslib.load_manifest(PACKAGE)
+# import roslib; roslib.load_manifest(PACKAGE)
 import rospy
 import tf.transformations
 from geometry_msgs.msg import Point, Pose, Pose2D, PoseWithCovariance, \
