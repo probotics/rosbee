@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<robot xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
+       xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+       xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+       xmlns:xacro="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+       name="rosbee2a" >
+       
+  <!-- Rosbee Frame -->
+  <xacro:include filename="$(find rosbee_description)/urdf/top_plate.urdf.xacro" />
+  <xacro:include filename="$(find rosbee_description)/urdf/bottom_plate.urdf.xacro" />
+  <xacro:include filename="$(find rosbee_description)/urdf/spacer.urdf.xacro" />
+  
+  <!-- Rosbee 2a kinect -->
+  <!--
+  <xacro:include filename="$(find rosbee_description)/urdf/sensors/kinect/kinect.urdf.xacro" />
+  -->
+  
+  <xacro:bottom_plate name="bottom_plate" parent="base">
+    <origin xyz="0 0 0.104" rpy="0 0 0" />
+  </xacro:bottom_plate>
+  
+  <xacro:spacer name="spacer_1" parent="bottom_plate">
+    <origin xyz="0 0 0.067" rpy="0 0 0" />
+  </xacro:spacer>
+
+  <xacro:spacer name="spacer_2" parent="bottom_plate">
+    <origin xyz="0 0 0.067" rpy="0 0 0" />
+  </xacro:spacer>
+
+  <xacro:spacer name="spacer_3" parent="bottom_plate">
+    <origin xyz="0 0 0.067" rpy="0 0 0" />
+  </xacro:spacer>
+
+  <xacro:spacer name="spacer_4" parent="bottom_plate">
+    <origin xyz="0 0 0.067" rpy="0 0 0" />
+  </xacro:spacer>
+
+  <xacro:top_plate name="top_plate" parent="bottom_plate">
+    <origin xyz="0 0 0.067" rpy="0 0 0" />
+  </xacro:bottom_plate>
+
+
+
+  <!--
+  <xacro:sensor_kinect parent="pan_tilt_yaw_link">
+    <origin xyz="-0.0000 -0.0000 0.0287" rpy="0 0 0"/>    
+    <!-- <origin xyz="-0.0011 -0.0003 0.03" rpy="0 0 0"/> -->
+  </xacro:sensor_kinect>
+  -->                
+
+</robot>
+

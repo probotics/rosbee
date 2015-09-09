@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<robot xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
+       xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
+       xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
+       xmlns:xacro="http://ros.org/wiki/xacro">
+  
+  <!-- bottom_plate properties -->
+  <property name="diameter" value="0.390" />
+  <property name="height" value="0.008" />
+         
+  <xacro:macro name="bottom_plate" params="name parent *origin">
+    
+    <joint name="${name}_joint" type="fixed">
+      <insert_block name="origin" />
+      <parent link="${parent}_link"/>
+      <child link="${name}_link"/>
+    </joint>
+    
+    <link name="${name}_link">
+      <visual>
+      <geometry>
+        <cylinder radius="${radius}" length="${height}" />        
+      </geometry>
+      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <material name="black">
+        <color rgba="0.000 0.000 0.000 1"/>
+      </material>
+    </visual>
+    </link>
+    
+  </xacro:macro>
+       
+       
+</robot>
