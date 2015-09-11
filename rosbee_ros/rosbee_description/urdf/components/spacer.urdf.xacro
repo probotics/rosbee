@@ -1,12 +1,9 @@
 <?xml version="1.0"?>
-<robot xmlns:sensor="http://playerstage.sourceforge.net/gazebo/xmlschema/#sensor"
-       xmlns:controller="http://playerstage.sourceforge.net/gazebo/xmlschema/#controller"
-       xmlns:interface="http://playerstage.sourceforge.net/gazebo/xmlschema/#interface"
-       xmlns:xacro="http://ros.org/wiki/xacro">
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="rosbee">
   
   <!-- spacer properties -->
-  <property name="diameter" value="0.015" />
-  <property name="height" value="0.059" />
+  <property name="spacer_diameter" value="0.015" />
+  <property name="spacer_height" value="0.059" />
          
   <xacro:macro name="spacer" params="name parent *origin">
     
@@ -19,15 +16,15 @@
     <link name="${name}_link">
       <visual>
       <geometry>
-        <cylinder radius="${radius}" length="${height}" />        
+        <cylinder radius="${spacer_diameter/2.000}" length="${spacer_height}" />        
       </geometry>
-      <origin rpy="0 0 0" xyz="0 0 0"/>
+      <origin rpy="0 0 0" xyz="0 0 ${(spacer_height / 2.000) + 0.004}"/>
       <material name="black">
-        <color rgba="0.000 0.000 0.000 1"/>
+        <color rgba="0.1 0.1 0.1 1"/>
       </material>
     </visual>
     </link>
-    
+
   </xacro:macro>
        
        
