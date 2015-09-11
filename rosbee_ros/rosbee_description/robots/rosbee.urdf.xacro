@@ -1,62 +1,56 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="rosbee">
        
-  <!-- Rosbee Frame -->
-  
+  <!--  Includes for various component xacros -->  
   <xacro:include filename="$(find rosbee_description)/urdf/components/top_plate.urdf.xacro" />
   <xacro:include filename="$(find rosbee_description)/urdf/components/bottom_plate.urdf.xacro" />
   <xacro:include filename="$(find rosbee_description)/urdf/components/spacer.urdf.xacro" />
-  
-  
-  
   <xacro:include filename="$(find rosbee_description)/urdf/components/kinect.urdf.xacro" />
   
-  
-  <link name="base_link">
-       
-    <visual>
-        <!--<origin xyz="0 0 0" rpy="0 0 0" />-->
-      <geometry>
-        <box size="0.01 0.01 0.01" />
-      </geometry>        
-    </visual>
+  <!--  
+        base_footprint is a fictitious link(frame) 
+        that is on the ground right below base_link origin, 
+        navigation stack dedpends on this frame 
+  -->
+  <link name="base_footprint_link"></link>
     
-  </link>
-  
-  
   <joint name="base_link_joint" type="fixed">
-     <origin xyz="0 0 0" rpy="0 0 0" />
-     <child link="bottom_plate_link" />
-     <parent link="base_link"/>
+     <origin xyz="0 0 0.104" rpy="0 0 0" />
+     <child link="base_link" />
+     <parent link="base_footprint_link"/>
   </joint>
 
-  
-  <xacro:bottom_plate name="bottom_plate" parent="base">
+  <!-- The bottom plate acts as our base_link -->
+  <xacro:bottom_plate name="base" parent="base_footprint">
     <origin xyz="0 0 0.104" rpy="0 0 0" />
   </xacro:bottom_plate>
   
-  <xacro:spacer name="spacer_1" parent="bottom_plate">
+  <!--  Spacers between bottom_plate and top_plate -->
+  <xacro:spacer name="spacer_1" parent="base">
     <origin xyz="0.105 0.105 0.000" rpy="0 0 0" />
   </xacro:spacer>
 
-  <xacro:spacer name="spacer_2" parent="bottom_plate">
+  <xacro:spacer name="spacer_2" parent="base">
     <origin xyz="0.105 -0.105 0.000" rpy="0 0 0" />
   </xacro:spacer>
 
-  <xacro:spacer name="spacer_3" parent="bottom_plate">
+  <xacro:spacer name="spacer_3" parent="base">
     <origin xyz="-0.105 -0.105 0.000" rpy="0 0 0" />
   </xacro:spacer>
 
-  <xacro:spacer name="spacer_4" parent="bottom_plate">
+  <xacro:spacer name="spacer_4" parent="base">
     <origin xyz="-0.105 0.105 0.000" rpy="0 0 0" />
   </xacro:spacer>
 
-  <xacro:top_plate name="top_plate" parent="bottom_plate">
+  <xacro:top_plate name="top_plate" parent="base">
     <origin xyz="0 0 0.067" rpy="0 0 0" />
   </xacro:top_plate>
   
-  
-  <xacro:sensor_kinect parent="bottom_plate_link">
+  <!-- TODO add wheel units -->  
+
+
+  <!--  kinect sensor -->
+  <xacro:sensor_kinect parent="base_link">
     <origin xyz="0.0675 0.0000 0.032" rpy="0 0 0"/> 
   </xacro:sensor_kinect> 
   

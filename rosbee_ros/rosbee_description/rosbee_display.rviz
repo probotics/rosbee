@@ -68,12 +68,11 @@ Visualization Manager:
         Expand Link Details: false
         Expand Tree: false
         Link Tree Style: Links in Alphabetic Order
-        base_link:
+        base_footprint_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
-          Value: true
-        bottom_plate_link:
+        base_link:
           Alpha: 1
           Show Axes: false
           Show Trail: false
@@ -127,9 +126,9 @@ Visualization Manager:
       Frame Timeout: 15
       Frames:
         All Enabled: true
-        base_link:
+        base_footprint_link:
           Value: true
-        bottom_plate_link:
+        base_link:
           Value: true
         camera_link:
           Value: true
@@ -147,14 +146,14 @@ Visualization Manager:
           Value: true
         top_plate_link:
           Value: true
-      Marker Scale: 0.01
+      Marker Scale: 0.1
       Name: TF
       Show Arrows: true
       Show Axes: true
       Show Names: true
       Tree:
-        base_link:
-          bottom_plate_link:
+        base_footprint_link:
+          base_link:
             camera_rgb_frame:
               camera_link:
                 {}
@@ -172,10 +171,28 @@ Visualization Manager:
               {}
       Update Interval: 0
       Value: true
+    - Alpha: 0.5
+      Cell Size: 0.01
+      Class: rviz/Grid
+      Color: 160; 160; 164
+      Enabled: false
+      Line Style:
+        Line Width: 0.03
+        Value: Lines
+      Name: Grid
+      Normal Cell Count: 0
+      Offset:
+        X: 0
+        Y: 0
+        Z: 0
+      Plane: XZ
+      Plane Cell Count: 1000
+      Reference Frame: <Fixed Frame>
+      Value: false
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
-    Fixed Frame: base_link
+    Fixed Frame: base_footprint_link
     Frame Rate: 30
   Name: root
   Tools:
@@ -196,22 +213,22 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 0.423119
+      Distance: 0.566064
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.06
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 0
-        Y: 0
-        Z: 0
+        X: 0.0147871
+        Y: -0.0115217
+        Z: 0.136194
       Name: Current View
       Near Clip Distance: 0.01
-      Pitch: 0.575398
+      Pitch: 0.095399
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 0.513583
+      Yaw: 0.713584
     Saved: ~
 Window Geometry:
   Displays:
