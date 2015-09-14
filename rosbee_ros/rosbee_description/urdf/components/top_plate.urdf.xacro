@@ -17,7 +17,8 @@
     <link name="${name}_link">
       <visual>
       <geometry>
-        <box size="${top_plate_length} ${top_plate_width} ${top_plate_height}"/>        
+        <!-- <box size="${top_plate_length} ${top_plate_width} ${top_plate_height}"/> -->
+        <mesh filename="package://rosbee_description/meshes/500085_pc_ base plate.stl" scale="0.001 0.001 0.001"/>       
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="black">

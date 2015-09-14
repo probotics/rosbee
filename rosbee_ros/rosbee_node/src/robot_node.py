@@ -249,7 +249,7 @@ class RobotNode(object):
        rospy.loginfo("no tf published")
 
   def _init_pubsub(self):
-    self.odom_pub = rospy.Publisher('odom', Odometry)
+    self.odom_pub = rospy.Publisher('odom', Odometry, queue_size = 10)
     self.cmd_vel_sub = rospy.Subscriber('cmd_vel', Twist, self.cmd_vel)
     self.transform_broadcaster = None
     if self.publish_tf:

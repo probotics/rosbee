@@ -18,7 +18,7 @@
       <geometry>
         <cylinder radius="${spacer_diameter/2.000}" length="${spacer_height}" />        
       </geometry>
-      <origin rpy="0 0 0" xyz="0 0 ${(spacer_height / 2.000) + 0.004}"/>
+      <origin rpy="0 0 0" xyz="0 0 ${(spacer_height / 2.000)}"/>
       <material name="black">
         <color rgba="0.1 0.1 0.1 1"/>
       </material>
