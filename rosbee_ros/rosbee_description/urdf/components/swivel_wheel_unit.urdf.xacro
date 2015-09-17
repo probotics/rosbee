@@ -1,12 +1,7 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="rosbee">
   
-  <!-- motor_wheel_unit properties -->
-  <property name="swivel_mount_width" value="0.057" />
-  <property name="swivel_mount_length" value="0.057" />
-  <property name="swivel_mount_height" value="0.0065" />
-
-
+  <!-- swivel wheel unit properties -->
   <property name="swivel_bracket_offset_z" value="-0.007" />
   
   <property name="swivel_wheel_offset_z" value="-0.055" />

@@ -34,7 +34,7 @@
     <link name="${name}_motor_mount_link">
       <visual>
       	<geometry>
-      		<mesh filename="package://rosbee_description/meshes/500093_RVS_motorsteun_rosbee.stl" scale="0.02541 0.02541 0.02541"/>
+      		<mesh filename="package://rosbee_description/meshes/500093_rvs_motormount_.stl" scale="0.02541 0.02541 0.02541"/>
       	</geometry>
 
       	<origin rpy="0 ${-M_PI/2} ${-reflect * M_PI/2}" xyz="0 ${reflect * motor_mount_vis_offset_y} 0"/>
@@ -53,19 +53,9 @@
     <link name="${name}_motor_link">
       <visual>
       <geometry>
-        <!--<cylinder length="${motor_height}" radius="${motor_radius}"/>-->
-        <mesh filename="package://rosbee_description/meshes/1443_metal_gearmotor2.stl" scale="0.001 0.001 0.001"/>       
+        <mesh filename="package://rosbee_description/meshes/1443_metal_gearmotor.stl" scale="0.001 0.001 0.001"/> 
       </geometry>
-
-      
-
-
-      <!--<origin rpy="0 0 0" xyz="0 -0.003 0.007"/>-->
-      
-      
   		<origin rpy="0 0 ${(M_PI/2)+(reflect * (M_PI/2))}" xyz="0 ${reflect*0.003} 0.007"/>
-			
-
       <material name="black">
         <color rgba="0.1 0.1 0.1 1"/>
       </material>
@@ -87,7 +77,7 @@
     <link name="${name}_wheelhub_link">
       <visual>
       <geometry>
-        <mesh filename="package://rosbee_description/meshes/wheel_hub.stl" scale="0.001 0.001 0.001"/>         
+        <mesh filename="package://rosbee_description/meshes/bane_bots_wheel_hub.stl" scale="0.001 0.001 0.001"/>  
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="black">
@@ -99,7 +89,7 @@
     <link name="${name}_wheeltire_link">
       <visual>
       <geometry>
-        <mesh filename="package://rosbee_description/meshes/tire.stl" scale="0.001 0.001 0.001"/>         
+        <mesh filename="package://rosbee_description/meshes/bane_bots_tire.stl" scale="0.001 0.001 0.001"/>         
       </geometry>
       <origin rpy="0 0 0" xyz="0 0 0"/>
       <material name="orange">

@@ -3,7 +3,7 @@
 <launch>
   <!-- The Robot Node -->
   <node pkg="rosbee_node" type="robot_node.py" name="rosbee_node" respawn="true">
-    <param name="verbose" value="true"/>
+    <param name="verbose" value="false"/>
     <param name="update_rate" value="50"/>
     <param name="fake_connection" value="false"/>
     <param name="fake_respons" value="false"/>
