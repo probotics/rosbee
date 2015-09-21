@@ -40,14 +40,14 @@
                           parent="base"
                           reflect="1"
                           offset_x="0"
-                          offset_y="0.1225"
+                          offset_y="0.127"
                           offset_z="-0.003"/>
 
   <xacro:motor_wheel_unit name="right"
                           parent="base"
                           reflect="-1"
                           offset_x="0"
-                          offset_y="0.1225"
+                          offset_y="0.127"
                           offset_z="-0.003"/>
 
   <xacro:swivel_wheel_unit name="front"

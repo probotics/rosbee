@@ -34,7 +34,9 @@
     <link name="${name}_motor_mount_link">
       <visual>
       	<geometry>
-      		<mesh filename="package://rosbee_description/meshes/500093_rvs_motormount_.stl" scale="0.02541 0.02541 0.02541"/>
+      		
+          <!--<mesh filename="package://rosbee_description/meshes/500093_rvs_motormount_.stl" scale="0.02541 0.02541 0.02541"/>-->
+          <mesh filename="package://rosbee_description/meshes/500093_RVS_motorsteun_Rosbee_mm.stl" scale="0.001 0.001 0.001"/>
       	</geometry>
 
       	<origin rpy="0 ${-M_PI/2} ${-reflect * M_PI/2}" xyz="0 ${reflect * motor_mount_vis_offset_y} 0"/>

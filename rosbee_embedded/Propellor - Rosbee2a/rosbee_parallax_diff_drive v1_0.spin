@@ -18,7 +18,7 @@
 
   Reversions:
   0.1: DV - basic implementation, without watchdog or command echos.
-
+  1.0; KP/HK Encoder counts modifid for 1:50 motor 1444
   License: MIT (see included LICENSE file) 
 
 
@@ -71,8 +71,8 @@ CON
   
   WHEEL_BASE_WIDTH = 0.332 ' Rosbee II #3' 0.420 ' Rosbee II #2' 0.368 ' Rosbee II #1      'M
   
-  COUNTS_PER_ROTATION = 1440.0 '3200.0
-  WHEEL_CIRCUMFERENCE = 124.0 * PI                      'MM
+  COUNTS_PER_ROTATION = 1200.0 '1920.0'1440.0 '3200.0
+  WHEEL_CIRCUMFERENCE = 123.2 * PI '122.5 * PI                      'MM
   
   COUNTS_PER_MM = COUNTS_PER_ROTATION / WHEEL_CIRCUMFERENCE
   MM_PER_COUNT = WHEEL_CIRCUMFERENCE / COUNTS_PER_ROTATION
@@ -80,7 +80,7 @@ CON
   'Factor used to convert the Velocity of Each Wheel (in mm/s) to Counts/PID Cycle
   'Example 2000 counts per rotation | PIDTIME 10 ms | Circumference 1000 mm
   '>>> 20 counts per PID Cycle when the wheel is traveling at 1000mm/s
-  '>>> The Setpoint for this wheel will be set to 20  
+  '>>> The Setpoint for this wheel wsill be set to 20  
   CONVERSIONFACTOR = (WHEEL_CIRCUMFERENCE / (COUNTS_PER_ROTATION / (1000.0/PIDCTIME)))  
   MM_PER_S_TO_CNTS_PER_PIDCYCLE = CONVERSIONFACTOR
 
