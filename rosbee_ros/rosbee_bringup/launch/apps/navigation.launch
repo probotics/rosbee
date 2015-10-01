@@ -1,0 +1,11 @@
+<launch>
+	
+	<node pkg="move_base" type="move_base" name="rosbee_move_base">
+		<rosparam file="$(find rosbee_bringup)/config/navigation/move_base.yaml" command="load"/>
+		<rosparam file="$(find rosbee_bringup)/config/navigation/costmap_common.yaml" command="load" ns="global_costmap" />
+		<rosparam file="$(find rosbee_bringup)/config/navigation/costmap_common.yaml" command="load" ns="local_costmap" />
+		<rosparam file="$(find rosbee_bringup)/config/navigation/costmap_global.yaml" command="load"/>
+		<rosparam file="$(find rosbee_bringup)/config/navigation/costmap_local.yaml" command="load"/>		
+	</node>
+
+</launch>
