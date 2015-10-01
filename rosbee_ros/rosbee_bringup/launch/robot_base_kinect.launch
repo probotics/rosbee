@@ -1,0 +1,26 @@
+<launch>
+
+	<param name="/use_sim_time" value="false" />
+
+	<!-- publish robot model -->
+	<param name="robot_description" command="$(find xacro)/xacro.py '$(find rosbee_description)/robots/rosbee.urdf.xacro'" />
+
+	<!-- start robot state publisher node -->
+	<node name="robot_state_publisher" pkg="robot_state_publisher" type="state_publisher" />
+
+	<!-- start the robot node for communication between ROS and Parallax -->
+	<include file="$(find rosbee_node)/launch/robot_node.launch" />
+	
+	<!-- start Kinect -->
+	<include file="$(find freenect_launch)/launch/freenect.launch"/>
+	
+	<!-- 	Convert kinect depth image to laser data using depthimage_to_laserscan 
+				http://wiki.ros.org/depthimage_to_laserscan-->
+	<node name="depthimage_to_laserscan" pkg="depthimage_to_laserscan" type="depthimage_to_laserscan" > 
+  	<remap from="image" to="/camera/depth/image_raw"/>
+  	<param name="scan_height" type="int" value="1" />
+  	<param name="range_min" type="double" value="0.45" />
+  	<param name="range_max" type="double" value="5.0" />
+	</node>
+
+</launch>
