@@ -13,7 +13,10 @@
 
     <rosparam file="$(find rosbee_navigation)/config/move_base/costmap_global_static.yaml" command="load" ns="global_costmap" if="$(arg static_map)"/>
 		
-		<rosparam file="$(find rosbee_navigation)/config/move_base/costmap_local.yaml" command="load"/>		
+		<rosparam file="$(find rosbee_navigation)/config/move_base/costmap_local.yaml" ns="local_costmap" command="load"/>
+		<param name="local_costmap/width" value="10.0"/>
+    <param name="local_costmap/height" value="10.0"/>
+
 	</node>
 
 </launch>
