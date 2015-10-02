@@ -1,5 +1,5 @@
 # http://wiki.ros.org/costmap_2d
-footprint: [[-17.5, -17.5], [-17.5, 17.5], [17.5, 17.5], [17.5, -17.5]]
+footprint: [[-0.175, -0.175], [-0.175, 0.175], [0.175, 0.175], [0.175, -0.175]]
 footprint_padding: 0.01
 
 robot_base_frame: base_footprint
@@ -25,4 +25,4 @@ obstacles_laser:
 
 # http://wiki.ros.org/costmap_2d/hydro/inflation
 inflation:
-    inflation_radius: 1.0
+    inflation_radius: 0.2
