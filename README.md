@@ -1,6 +1,8 @@
 # rosbee
 This repository contains source code for the Rosbee mobile platform.
 
+Information about setting up Rosbee can be found in the [wiki](../../wiki).
+
 ## rosbee_embedded:
 - rosbee_propeller:
   - Source code for the Parallax Embedded board
