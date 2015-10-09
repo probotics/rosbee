@@ -66,7 +66,7 @@
   
   <!--  kinect sensor -->
   <xacro:sensor_kinect parent="top_plate_link">
-    <origin xyz="-0.100 0.0000 0.126" rpy="0 0 -0.018516402"/> 
+    <origin xyz="-0.100 0.0000 0.126" rpy="0 0 0"/> 
   </xacro:sensor_kinect> 
   
 </robot>
