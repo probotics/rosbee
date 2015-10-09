@@ -20,7 +20,7 @@ lsigma:               0.075
 ogain:                3.0
 lskip:                0
 
-minimumScore:         50.0
+minimumScore:         200.0
 
 srr:                  0.1
 srt:                  0.2
