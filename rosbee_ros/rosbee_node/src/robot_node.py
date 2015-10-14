@@ -368,7 +368,9 @@ class RobotNode(object):
 
             # COMPUTE ODOMETRY
             # use average velocity, i.e. assume constant acceleration
-            avg_vel_state = tuple((float(x) + float(y))/2 for x, y in zip(old_vel_state, last_vel_state))
+            
+            # avg_vel_state = tuple((float(x) + float(y))/2 for x, y in zip(old_vel_state, last_vel_state))
+            avg_vel_state = last_vel_state
             transform = self.compute_odom(avg_vel_state, old_state_time, last_state_time, odom)
 
             # PUBLISH ODOMETRY
