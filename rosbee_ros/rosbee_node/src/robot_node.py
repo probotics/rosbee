@@ -313,7 +313,7 @@ class RobotNode(object):
         self._pos2d.y += sin(last_angle)*x + cos(last_angle)*y
         self._pos2d.theta += angle
 
-        # Turtlebot quaternion from yaw. simplified version of tf.transformations.quaternion_about_axis
+        # Rosbee quaternion from yaw. simplified version of tf.transformations.quaternion_about_axis
         odom_quat = (0., 0., sin(self._pos2d.theta/2.), cos(self._pos2d.theta/2.))
 
         # construct the transform
@@ -404,11 +404,11 @@ class RobotNode(object):
             	last_vel_state = last_state[:3]
             	last_other_state = last_state[3:]
 
+
             	# COMPUTE ODOMETRY
             	# use average velocity, i.e. assume constant acceleration
             	avg_vel_state = tuple((float(x) + float(y))/2 for x, y in zip(old_vel_state, last_vel_state))
             	transform = self.compute_odom(avg_vel_state, old_state_time, last_state_time, odom)
-
             	# PUBLISH ODOMETRY
             	self.odom_pub.publish(odom)
             if self.publish_tf:
