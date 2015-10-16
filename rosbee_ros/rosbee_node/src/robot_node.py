@@ -123,26 +123,26 @@ class Robot(object):
     #rospy.loginfo("msg=%s", str(msg))
     
     if not self.fake_connection:
-        done = False
-        start_time = rospy.get_rostime()
-        while not done:
-          try:
-            if self.sci is None:
-                self.sci = SerialInterface(self.tty, self.baudrate)
-            with self.sci.lock:
-                self.sci.flush_input()
-                self.sci.send(msg)
-                rsp = self.sci.read()
-            #rsp = msg
-            #rospy.loginfo("rsp=%s", str(rsp))
-            done = True
-          except Exception, err:
-            rospy.loginfo(str(err))
-            if rospy.get_rostime() - start_time > self.connection_timeout:
-              raise rospy.ROSInterruptException("connection to robot seems broken")
-            self.sci = None # assume serial interface is broken
-            rospy.loginfo('waiting for connection')
-            rospy.sleep(1.) # wait 1 seconds before retrying
+      done = False
+      start_time = rospy.get_rostime()
+      while not done:
+        try:
+          if self.sci is None:
+            self.sci = SerialInterface(self.tty, self.baudrate)
+          with self.sci.lock:
+            self.sci.flush_input()
+            self.sci.send(msg)
+            rsp = self.sci.read()
+          #rsp = msg
+          #rospy.loginfo("rsp=%s", str(rsp))
+          done = True
+        except Exception, err:
+          rospy.loginfo(str(err))
+          if rospy.get_rostime() - start_time > self.connection_timeout:
+            raise rospy.ROSInterruptException("connection to robot seems broken")
+          self.sci = None # assume serial interface is broken
+          rospy.loginfo('waiting for connection')
+          rospy.sleep(1.) # wait 1 seconds before retrying
               
     if self.fake_connection or self.fake_respons:
       rsp = msg
@@ -280,144 +280,144 @@ class RobotNode(object):
     self.req_cmd_vel = msg.linear.x, msg.linear.y, msg.angular.z
 
   def compute_odom(self, velocities, last_time, current_time, odom):
-        """
-        Compute current odometry.  Updates odom instance and returns tf
-        transform. compute_odom() does not set frame ids or covariances in
-        Odometry instance.  It will only set stamp, pose, and twist.
+    """
+    Compute current odometry.  Updates odom instance and returns tf
+    transform. compute_odom() does not set frame ids or covariances in
+    Odometry instance.  It will only set stamp, pose, and twist.
 
-        @param velocities: linear and angular velocities
-          @type  velocities: (vx, vy, vth)
-        @param last_time: time of last calculation
-          @type  last_time: rospy.Time
-        @param current_time: current time
-          @type  current_time: rospy.Time
-        @param odom: Odometry instance to update.
-          @type  odom: nav_msgs.msg.Odometry
+    @param velocities: linear and angular velocities
+      @type  velocities: (vx, vy, vth)
+    @param last_time: time of last calculation
+      @type  last_time: rospy.Time
+    @param current_time: current time
+      @type  current_time: rospy.Time
+    @param odom: Odometry instance to update.
+      @type  odom: nav_msgs.msg.Odometry
 
-        @return: transform
-        @rtype: ( (float, float, float), (float, float, float, float) )
-        """
-        dt = (current_time - last_time).to_sec()
-        vx, vy, vth = velocities
+    @return: transform
+    @rtype: ( (float, float, float), (float, float, float, float) )
+    """
+    dt = (current_time - last_time).to_sec()
+    vx, vy, vth = velocities
+    
+    # Calculating delta distance (d) and delta_angle (angle) from velocities
+    d  = (vx * dt) * self.odom_linear_scale_correction #correction factor from calibration
+    angle = (vth * dt) * self.odom_angular_scale_correction #correction factor from calibration
+
+    x = cos(angle) * d
+    y = -sin(angle) * d
+
+    last_angle = self._pos2d.theta
+    self._pos2d.x += cos(last_angle)*x - sin(last_angle)*y
+    self._pos2d.y += sin(last_angle)*x + cos(last_angle)*y
+    self._pos2d.theta += angle
+
+    # Rosbee quaternion from yaw. simplified version of tf.transformations.quaternion_about_axis
+    odom_quat = (0., 0., sin(self._pos2d.theta/2.), cos(self._pos2d.theta/2.))
+
+    # construct the transform
+    transform = (self._pos2d.x, self._pos2d.y, 0.), odom_quat
+
+    # update the odometry state
+    odom.header.stamp = current_time
+    odom.pose.pose   = Pose(Point(self._pos2d.x, self._pos2d.y, 0.), Quaternion(*odom_quat))
+    odom.twist.twist = Twist(Vector3(d/dt, 0, 0), Vector3(0, 0, angle/dt))
+    """
+    # old code did not apply correction to velocities
+    # odom calculation from velocities
+    th = self._pos2d.theta
+    self._pos2d.x += (vx * cos(th) - vy * sin(th)) * self.odom_linear_scale_correction * dt;
+    self._pos2d.y += (vx * sin(th) + vy * cos(th)) * self.odom_linear_scale_correction* dt;
+    self._pos2d.theta += vth * self.odom_angular_scale_correction * dt;
         
-	      # Calculating delta distance (d) and delta_angle (angle) from velocities
-        d  = (vx * dt) * self.odom_linear_scale_correction #correction factor from calibration
-        angle = (vth * dt) * self.odom_angular_scale_correction #correction factor from calibration
+    # Quaternion from yaw
+    odom_quat = (0., 0., sin(self._pos2d.theta/2.), cos(self._pos2d.theta/2.))
 
-        x = cos(angle) * d
-        y = -sin(angle) * d
+    # construct the transform
+    transform = (self._pos2d.x, self._pos2d.y, 0.), odom_quat
 
-        last_angle = self._pos2d.theta
-        self._pos2d.x += cos(last_angle)*x - sin(last_angle)*y
-        self._pos2d.y += sin(last_angle)*x + cos(last_angle)*y
-        self._pos2d.theta += angle
+    # update the odometry state
+    odom.header.stamp = current_time
+    odom.pose.pose   = Pose(Point(self._pos2d.x, self._pos2d.y, 0.), Quaternion(*odom_quat))
+    odom.twist.twist = Twist(Vector3(vx, vy, 0), Vector3(0, 0, vth))
+    """
 
-        # Rosbee quaternion from yaw. simplified version of tf.transformations.quaternion_about_axis
-        odom_quat = (0., 0., sin(self._pos2d.theta/2.), cos(self._pos2d.theta/2.))
 
-        # construct the transform
-        transform = (self._pos2d.x, self._pos2d.y, 0.), odom_quat
+    if vx == 0.0 and \
+          vy == 0.0 and \
+            vth == 0.0:
+      odom.pose.covariance = ODOM_POSE_COVARIANCE2
+      odom.twist.covariance = ODOM_TWIST_COVARIANCE2
+    else:
+      odom.pose.covariance = ODOM_POSE_COVARIANCE
+      odom.twist.covariance = ODOM_TWIST_COVARIANCE
 
-        # update the odometry state
-        odom.header.stamp = current_time
-        odom.pose.pose   = Pose(Point(self._pos2d.x, self._pos2d.y, 0.), Quaternion(*odom_quat))
-        odom.twist.twist = Twist(Vector3(d/dt, 0, 0), Vector3(0, 0, angle/dt))
-        """
-        # old code did not apply correction to velocities
-        # odom calculation from velocities
-        th = self._pos2d.theta
-        self._pos2d.x += (vx * cos(th) - vy * sin(th)) * self.odom_linear_scale_correction * dt;
-        self._pos2d.y += (vx * sin(th) + vy * cos(th)) * self.odom_linear_scale_correction* dt;
-        self._pos2d.theta += vth * self.odom_angular_scale_correction * dt;
-            
-        # Quaternion from yaw
-        odom_quat = (0., 0., sin(self._pos2d.theta/2.), cos(self._pos2d.theta/2.))
-
-        # construct the transform
-        transform = (self._pos2d.x, self._pos2d.y, 0.), odom_quat
-
-        # update the odometry state
-        odom.header.stamp = current_time
-        odom.pose.pose   = Pose(Point(self._pos2d.x, self._pos2d.y, 0.), Quaternion(*odom_quat))
-        odom.twist.twist = Twist(Vector3(vx, vy, 0), Vector3(0, 0, vth))
-        """
-
-	
-        if vx == 0.0 and \
-              vy == 0.0 and \
-                vth == 0.0:
-            odom.pose.covariance = ODOM_POSE_COVARIANCE2
-            odom.twist.covariance = ODOM_TWIST_COVARIANCE2
-        else:
-            odom.pose.covariance = ODOM_POSE_COVARIANCE
-            odom.twist.covariance = ODOM_TWIST_COVARIANCE
-
-        # return the transform
-        return transform   
+    # return the transform
+    return transform   
         
   def publish_odometry_transform(self, odometry):
-        self.transform_broadcaster.sendTransform(
-            (odometry.pose.pose.position.x, odometry.pose.pose.position.y, odometry.pose.pose.position.z),
-            (odometry.pose.pose.orientation.x, odometry.pose.pose.orientation.y, odometry.pose.pose.orientation.z,
-             odometry.pose.pose.orientation.w),
-             odometry.header.stamp, odometry.child_frame_id, odometry.header.frame_id)
+    self.transform_broadcaster.sendTransform(
+        (odometry.pose.pose.position.x, odometry.pose.pose.position.y, odometry.pose.pose.position.z),
+        (odometry.pose.pose.orientation.x, odometry.pose.pose.orientation.y, odometry.pose.pose.orientation.z,
+         odometry.pose.pose.orientation.w),
+         odometry.header.stamp, odometry.child_frame_id, odometry.header.frame_id)
    
   def spin(self):
 
-        odom = Odometry(header=rospy.Header(frame_id=self.odom_frame), child_frame_id=self.base_frame)
-        transform = None    
-        last_state_time = rospy.get_rostime()
-        last_vel_state = (0.0, 0.0, 0.0)
-        last_other_state = ()
-        req_cmd_vel = (0.0, 0.0, 0.0)
-        last_cmd_vel_time = rospy.get_rostime()
-        
-        r = rospy.Rate(self.update_rate)
-        while not rospy.is_shutdown():
-            current_time = rospy.get_rostime()
-                       
-            # ACT & SENSE
-            if self.req_cmd_vel is not None:
-                req_cmd_vel = self.req_cmd_vel
-                # set to None to signal that command is handled
-                self.req_cmd_vel = None
-                # reset time for timeout
-                last_cmd_vel_time = current_time
-            else:
-                #stop on timeout
-                if current_time - last_cmd_vel_time > self.cmd_vel_timeout:
-                    req_cmd_vel = (0.0, 0.0, 0.0)
-                    if self.verbose:
-                        rospy.loginfo('timeout')
-            
-            # send velocity command & receive state
-            old_state_time = last_state_time
-            old_vel_state = last_vel_state     
-            last_state = self.robot.drive(req_cmd_vel)
-            last_state_time = current_time
-            
-            if last_state != 'INV_DATA':
-               	last_vel_state = last_state[:3]
-              	last_other_state = last_state[3:]
+    odom = Odometry(header=rospy.Header(frame_id=self.odom_frame), child_frame_id=self.base_frame)
+    transform = None    
+    last_state_time = rospy.get_rostime()
+    last_vel_state = (0.0, 0.0, 0.0)
+    last_other_state = ()
+    req_cmd_vel = (0.0, 0.0, 0.0)
+    last_cmd_vel_time = rospy.get_rostime()
+    
+    r = rospy.Rate(self.update_rate)
+    while not rospy.is_shutdown():
+      current_time = rospy.get_rostime()
+                 
+      # ACT & SENSE
+      if self.req_cmd_vel is not None:
+        req_cmd_vel = self.req_cmd_vel
+        # set to None to signal that command is handled
+        self.req_cmd_vel = None
+        # reset time for timeout
+        last_cmd_vel_time = current_time
+      else:
+        #stop on timeout
+        if current_time - last_cmd_vel_time > self.cmd_vel_timeout:
+          req_cmd_vel = (0.0, 0.0, 0.0)
+          if self.verbose:
+            rospy.loginfo('timeout')
+      
+      # send velocity command & receive state
+      old_state_time = last_state_time
+      old_vel_state = last_vel_state     
+      last_state = self.robot.drive(req_cmd_vel)
+      last_state_time = current_time
+      
+      if last_state != 'INV_DATA':
+       	last_vel_state = last_state[:3]
+      	last_other_state = last_state[3:]
 
-              	# COMPUTE ODOMETRY
-              	# use average velocity, i.e. assume constant acceleration
-              	avg_vel_state = tuple((float(x) + float(y))/2 for x, y in zip(old_vel_state, last_vel_state))
-              	transform = self.compute_odom(avg_vel_state, old_state_time, last_state_time, odom)
-              	# PUBLISH ODOMETRY
-              	self.odom_pub.publish(odom)
-            
-                if self.publish_tf:
-                    self.publish_odometry_transform(odom)              
+      	# COMPUTE ODOMETRY
+      	# use average velocity, i.e. assume constant acceleration
+      	avg_vel_state = tuple((float(x) + float(y))/2 for x, y in zip(old_vel_state, last_vel_state))
+      	transform = self.compute_odom(avg_vel_state, old_state_time, last_state_time, odom)
+      	# PUBLISH ODOMETRY
+      	self.odom_pub.publish(odom)
+    
+        if self.publish_tf:
+          self.publish_odometry_transform(odom)              
 
-            if self.verbose:
-                rospy.loginfo("velocity setpoint: %s", str(req_cmd_vel))
-                rospy.loginfo("velocity measured: %s", str(last_vel_state))
-                rospy.loginfo("pose: %s", str(transform))
-                rospy.loginfo("debug: %s", str(last_other_state))
-                rospy.loginfo("last_state: %s", str(last_state))
- 
-            r.sleep()
+      if self.verbose:
+        rospy.loginfo("velocity setpoint: %s", str(req_cmd_vel))
+        rospy.loginfo("velocity measured: %s", str(last_vel_state))
+        rospy.loginfo("pose: %s", str(transform))
+        rospy.loginfo("debug: %s", str(last_other_state))
+        rospy.loginfo("last_state: %s", str(last_state))
+
+      r.sleep()
             
   def start(self):
     self.robot.start()
