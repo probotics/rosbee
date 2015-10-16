@@ -9,7 +9,7 @@
   	<remap from="image" to="/camera/depth/image_raw"/>
   	<param name="scan_height" type="int" value="1" />
   	<param name="range_min" type="double" value="0.45" />
-  	<param name="range_max" type="double" value="4.5" />
+  	<param name="range_max" type="double" value="5.0" />
   	<param name="output_frame_id" type="str" value="camera_depth_frame" />
 	</node>
 </launch>
