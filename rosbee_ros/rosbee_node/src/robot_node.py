@@ -175,12 +175,11 @@ class Robot(object):
     cmd = ('$2', int(round(vx*1000)), int(round(vy*1000)), int(round(vth*1000)))
     rsp = self.send_command(cmd)
     
-    
-
     if rsp[0] == '$2':
     	state = tuple(float(x)/1000 for x in rsp[1:])
     else:
-	state = 'INV_DATA'   
+      state = 'INV_DATA'
+      rospy.logerr('Invalid data received from from Propellor')   
     
     return state
 
@@ -301,7 +300,7 @@ class RobotNode(object):
         dt = (current_time - last_time).to_sec()
         vx, vy, vth = velocities
         
-	# this is really delta_distance, delta_angle
+	      # Calculating delta distance (d) and delta_angle (angle) from velocities
         d  = (vx * dt) * self.odom_linear_scale_correction #correction factor from calibration
         angle = (vth * dt) * self.odom_angular_scale_correction #correction factor from calibration
 
@@ -324,8 +323,8 @@ class RobotNode(object):
         odom.pose.pose   = Pose(Point(self._pos2d.x, self._pos2d.y, 0.), Quaternion(*odom_quat))
         odom.twist.twist = Twist(Vector3(d/dt, 0, 0), Vector3(0, 0, angle/dt))
         """
-	# below old code
-	# odom calculation from velocities
+        # old code did not apply correction to velocities
+        # odom calculation from velocities
         th = self._pos2d.theta
         self._pos2d.x += (vx * cos(th) - vy * sin(th)) * self.odom_linear_scale_correction * dt;
         self._pos2d.y += (vx * sin(th) + vy * cos(th)) * self.odom_linear_scale_correction* dt;
@@ -344,7 +343,7 @@ class RobotNode(object):
         """
 
 	
-	if vx == 0.0 and \
+        if vx == 0.0 and \
               vy == 0.0 and \
                 vth == 0.0:
             odom.pose.covariance = ODOM_POSE_COVARIANCE2
@@ -389,7 +388,7 @@ class RobotNode(object):
                 if current_time - last_cmd_vel_time > self.cmd_vel_timeout:
                     req_cmd_vel = (0.0, 0.0, 0.0)
                     if self.verbose:
-                      rospy.loginfo('timeout')
+                        rospy.loginfo('timeout')
             
             # send velocity command & receive state
             old_state_time = last_state_time
@@ -397,29 +396,26 @@ class RobotNode(object):
             last_state = self.robot.drive(req_cmd_vel)
             last_state_time = current_time
             
-	    if last_state == 'INV_DATA':
-		print last_state
+            if last_state != 'INV_DATA':
+               	last_vel_state = last_state[:3]
+              	last_other_state = last_state[3:]
 
-	    else:
-            	last_vel_state = last_state[:3]
-            	last_other_state = last_state[3:]
-
-
-            	# COMPUTE ODOMETRY
-            	# use average velocity, i.e. assume constant acceleration
-            	avg_vel_state = tuple((float(x) + float(y))/2 for x, y in zip(old_vel_state, last_vel_state))
-            	transform = self.compute_odom(avg_vel_state, old_state_time, last_state_time, odom)
-            	# PUBLISH ODOMETRY
-            	self.odom_pub.publish(odom)
-            if self.publish_tf:
-              self.publish_odometry_transform(odom)              
+              	# COMPUTE ODOMETRY
+              	# use average velocity, i.e. assume constant acceleration
+              	avg_vel_state = tuple((float(x) + float(y))/2 for x, y in zip(old_vel_state, last_vel_state))
+              	transform = self.compute_odom(avg_vel_state, old_state_time, last_state_time, odom)
+              	# PUBLISH ODOMETRY
+              	self.odom_pub.publish(odom)
+            
+                if self.publish_tf:
+                    self.publish_odometry_transform(odom)              
 
             if self.verbose:
-              rospy.loginfo("velocity setpoint: %s", str(req_cmd_vel))
-              rospy.loginfo("velocity measured: %s", str(last_vel_state))
-              rospy.loginfo("pose: %s", str(transform))
-              rospy.loginfo("debug: %s", str(last_other_state))
-	      rospy.loginfo("last_state: %s", str(last_state))
+                rospy.loginfo("velocity setpoint: %s", str(req_cmd_vel))
+                rospy.loginfo("velocity measured: %s", str(last_vel_state))
+                rospy.loginfo("pose: %s", str(transform))
+                rospy.loginfo("debug: %s", str(last_other_state))
+                rospy.loginfo("last_state: %s", str(last_state))
  
             r.sleep()
             
