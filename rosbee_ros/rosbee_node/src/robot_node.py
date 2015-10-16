@@ -174,7 +174,14 @@ class Robot(object):
 
     cmd = ('$2', int(round(vx*1000)), int(round(vy*1000)), int(round(vth*1000)))
     rsp = self.send_command(cmd)
-    state = tuple(float(x)/1000 for x in rsp[1:])   
+    
+    
+
+    if rsp[0] == '$2':
+    	state = tuple(float(x)/1000 for x in rsp[1:])
+    else:
+	state = 'INV_DATA'   
+    
     return state
 
     
@@ -294,7 +301,31 @@ class RobotNode(object):
         dt = (current_time - last_time).to_sec()
         vx, vy, vth = velocities
         
-        # odom calculation from velocities
+	# this is really delta_distance, delta_angle
+        d  = (vx * dt) * self.odom_linear_scale_correction #correction factor from calibration
+        angle = (vth * dt) * self.odom_angular_scale_correction #correction factor from calibration
+
+        x = cos(angle) * d
+        y = -sin(angle) * d
+
+        last_angle = self._pos2d.theta
+        self._pos2d.x += cos(last_angle)*x - sin(last_angle)*y
+        self._pos2d.y += sin(last_angle)*x + cos(last_angle)*y
+        self._pos2d.theta += angle
+
+        # Turtlebot quaternion from yaw. simplified version of tf.transformations.quaternion_about_axis
+        odom_quat = (0., 0., sin(self._pos2d.theta/2.), cos(self._pos2d.theta/2.))
+
+        # construct the transform
+        transform = (self._pos2d.x, self._pos2d.y, 0.), odom_quat
+
+        # update the odometry state
+        odom.header.stamp = current_time
+        odom.pose.pose   = Pose(Point(self._pos2d.x, self._pos2d.y, 0.), Quaternion(*odom_quat))
+        odom.twist.twist = Twist(Vector3(d/dt, 0, 0), Vector3(0, 0, angle/dt))
+        """
+	# below old code
+	# odom calculation from velocities
         th = self._pos2d.theta
         self._pos2d.x += (vx * cos(th) - vy * sin(th)) * self.odom_linear_scale_correction * dt;
         self._pos2d.y += (vx * sin(th) + vy * cos(th)) * self.odom_linear_scale_correction* dt;
@@ -310,7 +341,10 @@ class RobotNode(object):
         odom.header.stamp = current_time
         odom.pose.pose   = Pose(Point(self._pos2d.x, self._pos2d.y, 0.), Quaternion(*odom_quat))
         odom.twist.twist = Twist(Vector3(vx, vy, 0), Vector3(0, 0, vth))
-        if vx == 0.0 and \
+        """
+
+	
+	if vx == 0.0 and \
               vy == 0.0 and \
                 vth == 0.0:
             odom.pose.covariance = ODOM_POSE_COVARIANCE2
@@ -363,16 +397,20 @@ class RobotNode(object):
             last_state = self.robot.drive(req_cmd_vel)
             last_state_time = current_time
             
-            last_vel_state = last_state[:3]
-            last_other_state = last_state[3:]
+	    if last_state == 'INV_DATA':
+		print last_state
 
-            # COMPUTE ODOMETRY
-            # use average velocity, i.e. assume constant acceleration
-            avg_vel_state = tuple((float(x) + float(y))/2 for x, y in zip(old_vel_state, last_vel_state))
-            transform = self.compute_odom(avg_vel_state, old_state_time, last_state_time, odom)
+	    else:
+            	last_vel_state = last_state[:3]
+            	last_other_state = last_state[3:]
 
-            # PUBLISH ODOMETRY
-            self.odom_pub.publish(odom)
+            	# COMPUTE ODOMETRY
+            	# use average velocity, i.e. assume constant acceleration
+            	avg_vel_state = tuple((float(x) + float(y))/2 for x, y in zip(old_vel_state, last_vel_state))
+            	transform = self.compute_odom(avg_vel_state, old_state_time, last_state_time, odom)
+
+            	# PUBLISH ODOMETRY
+            	self.odom_pub.publish(odom)
             if self.publish_tf:
               self.publish_odometry_transform(odom)              
 
@@ -381,6 +419,7 @@ class RobotNode(object):
               rospy.loginfo("velocity measured: %s", str(last_vel_state))
               rospy.loginfo("pose: %s", str(transform))
               rospy.loginfo("debug: %s", str(last_other_state))
+	      rospy.loginfo("last_state: %s", str(last_state))
  
             r.sleep()
             
